@@ -47,54 +47,11 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
  */
 public class DataStreamJob {
 
-	private static final String PROP_BOOTSTRAP_SERVERS = "bootstrap-servers";
-	private static final String PROP_REQUEST_TOPIC = "request-topic";
-	private static final String PROP_RESPONSE_TOPIC = "response-topic";
 
 	public static void main(String[] args) throws Exception {
 		ParameterTool parameters = ParameterTool.fromArgs(args);
-		final String bootstrapServers = parameters.get(PROP_BOOTSTRAP_SERVERS);
-		final String requestTopic = parameters.get(PROP_REQUEST_TOPIC);
-		final String responseTopic = parameters.get(PROP_RESPONSE_TOPIC);
-
-		KafkaSource<String> source = KafkaSource.<String>builder()
-				.setBootstrapServers(bootstrapServers)
-				.setTopics(requestTopic)
-				.setGroupId("rd-flink")
-				.setStartingOffsets(OffsetsInitializer.earliest())
-				.setValueOnlyDeserializer(new SimpleStringSchema())
-				.build();
-		
-		KafkaSink<String> sink = KafkaSink.<String>builder()
-				.setBootstrapServers(bootstrapServers)
-				.setRecordSerializer(KafkaRecordSerializationSchema.builder().setTopic(responseTopic)
-						.setValueSerializationSchema(new SimpleStringSchema()).build())
-				.setDeliverGuarantee(DeliveryGuarantee.AT_LEAST_ONCE).build();
-		
-		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-		
-		DataStream<String> stream = env.fromSource(source, WatermarkStrategy.noWatermarks(), "Kafka Source");
-		stream
-			.map(String::toUpperCase)
-			.sinkTo(sink);
 
 		
-		/*
-		 * Here, you can start creating your execution plan for Flink.
-		 *
-		 * Start with getting some data from the environment, like env.fromSequence(1,
-		 * 10);
-		 *
-		 * then, transform the resulting DataStream<Long> using operations like
-		 * .filter() .flatMap() .window() .process()
-		 *
-		 * and many more. Have a look at the programming guide:
-		 *
-		 * https://nightlies.apache.org/flink/flink-docs-stable/
-		 *
-		 */
-
-		// Execute program, beginning computation.
 		env.execute("Text Uppercase Processor");
 	}
 }
