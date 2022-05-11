@@ -1,1 +1,4 @@
-/analyzing-app1/target/
+**/.settings/
+**/.classpath
+**/.project
+**/target/
