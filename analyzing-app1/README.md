@@ -1,0 +1,1 @@
+--bootstrap-servers 10.10.15.85:32092 --request-topic uppercase-requests --response-topic uppercase-responses
