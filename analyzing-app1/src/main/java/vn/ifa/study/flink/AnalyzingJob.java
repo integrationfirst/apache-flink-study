@@ -98,30 +98,7 @@ public class AnalyzingJob {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
         final ObjectMapper mapper = new ObjectMapper();
-        
-        Configuration conf = Configuration.builder().build();
-        
-        conf.setDefaults(new Configuration.Defaults() {
 
-            private final JsonProvider jsonProvider = new JacksonJsonProvider();
-            private final MappingProvider mappingProvider = new JacksonMappingProvider();
-              
-            @Override
-            public JsonProvider jsonProvider() {
-                return jsonProvider;
-            }
-
-            @Override
-            public MappingProvider mappingProvider() {
-                return mappingProvider;
-            }
-            
-            @Override
-            public Set<Option> options() {
-                return EnumSet.noneOf(Option.class);
-            }
-        });
-        
         DataStream<JsonNode> stream = env.fromSource(source, WatermarkStrategy.noWatermarks(), "KafkaSource");
 
         stream.map(json -> {
