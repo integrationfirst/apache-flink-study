@@ -47,7 +47,7 @@ import com.fasterxml.jackson.databind.JsonNode;
  * main(String[] args)) method, change the respective entry in the POM.xml file
  * (simply search for 'mainClass').
  */
-public class DataStreamJob {
+public class AnalyzingJob {
 
     private static final String PROP_BOOTSTRAP_SERVERS = "bootstrap-servers";
 
@@ -82,7 +82,7 @@ public class DataStreamJob {
 
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
-        DataStream<JsonNode> stream = env.fromSource(source, WatermarkStrategy.noWatermarks(), "Kafka Source");
+        DataStream<JsonNode> stream = env.fromSource(source, WatermarkStrategy.noWatermarks(), "KafkaSource");
 
         stream.sinkTo(sink);
         /*
