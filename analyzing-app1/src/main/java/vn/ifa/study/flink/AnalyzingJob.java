@@ -18,6 +18,10 @@
 
 package vn.ifa.study.flink;
 
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Set;
+
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.connector.base.DeliveryGuarantee;
@@ -30,6 +34,17 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.DocumentContext;
+import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.Option;
+import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
+import com.jayway.jsonpath.spi.json.JsonProvider;
+import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
+import com.jayway.jsonpath.spi.mapper.MappingProvider;
 
 /**
  * Skeleton for a Flink DataStream Job.
@@ -82,9 +97,61 @@ public class AnalyzingJob {
 
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
+        final ObjectMapper mapper = new ObjectMapper();
+        
+        Configuration conf = Configuration.builder().build();
+        
+        conf.setDefaults(new Configuration.Defaults() {
+
+            private final JsonProvider jsonProvider = new JacksonJsonProvider();
+            private final MappingProvider mappingProvider = new JacksonMappingProvider();
+              
+            @Override
+            public JsonProvider jsonProvider() {
+                return jsonProvider;
+            }
+
+            @Override
+            public MappingProvider mappingProvider() {
+                return mappingProvider;
+            }
+            
+            @Override
+            public Set<Option> options() {
+                return EnumSet.noneOf(Option.class);
+            }
+        });
+        
         DataStream<JsonNode> stream = env.fromSource(source, WatermarkStrategy.noWatermarks(), "KafkaSource");
 
-        stream.sinkTo(sink);
+        stream.map(json -> {
+            
+            final ObjectNode mappedJson = mapper.createObjectNode();
+
+            DocumentContext jsonContext = JsonPath.parse(json.toString());
+            
+            mappedJson.set("fileUrls", mapper.createArrayNode());
+            mappedJson.put("traceId", jsonContext.<String>read("$.traceId"));
+            mappedJson.put("eventId", jsonContext.<String>read("$.eventId"));
+            
+            List<Object> documentsAsJson = JsonPath.parse(json.toString()).read("$.documents");
+
+            for (Object documentAsJson : documentsAsJson) {
+
+                final JsonNode arrayNode = mappedJson.get("fileUrls");
+                
+                List<Object> filesAsJson = JsonPath.parse(documentAsJson).read("$.files");
+                
+                for (Object fileAsJson : filesAsJson) {
+
+                    final String fileUrl = JsonPath.parse(fileAsJson).read("$.fileUrl");
+
+                    ((ArrayNode) arrayNode).add(fileUrl);
+                }
+            }
+            return (JsonNode) mappedJson;
+        })
+        .sinkTo(sink);
         /*
          * Here, you can start creating your execution plan for Flink.
          *
