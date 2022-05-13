@@ -88,7 +88,7 @@
               <transformers>
                 <transformer />
                 <transformer>
-                  <mainClass>vn.ifa.study.flink.DataStreamJob</mainClass>
+                  <mainClass>vn.ifa.study.flink.AnalyzingJob</mainClass>
                 </transformer>
               </transformers>
             </configuration>
