@@ -22,9 +22,6 @@ import java.util.List;
 
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.java.utils.ParameterTool;
-import org.apache.flink.connector.base.DeliveryGuarantee;
-import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
-import org.apache.flink.connector.kafka.sink.KafkaSink;
 import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
 import org.apache.flink.connector.kafka.source.reader.deserializer.KafkaRecordDeserializationSchema;
@@ -76,17 +73,6 @@ public class AnalyzingJob {
                 .setDeserializer(KafkaRecordDeserializationSchema.valueOnly(JsonDeserializer.class))
                 .build();
 
-        KafkaRecordSerializationSchema<JsonNode> kafkaRecordSerializationSchema = KafkaRecordSerializationSchema.<JsonNode> builder()
-                .setTopic(responseTopic)
-                .setKafkaValueSerializer(JsonSerializer.class)
-                .build();
-
-        KafkaSink<JsonNode> sink = KafkaSink.<JsonNode> builder()
-                .setBootstrapServers(bootstrapServers)
-                .setRecordSerializer(kafkaRecordSerializationSchema)
-                .setDeliverGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
-                .build();
-
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
         final ObjectMapper mapper = new ObjectMapper();
@@ -120,7 +106,7 @@ public class AnalyzingJob {
             }
             return (JsonNode) mappedJson;
         })
-        .sinkTo(sink);
+        .print();
         /*
          * Here, you can start creating your execution plan for Flink.
          *
