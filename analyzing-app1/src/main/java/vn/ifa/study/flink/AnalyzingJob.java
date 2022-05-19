@@ -19,8 +19,11 @@
 package vn.ifa.study.flink;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
+import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
@@ -28,6 +31,7 @@ import org.apache.flink.connector.kafka.source.reader.deserializer.KafkaRecordDe
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
+import com.amazonaws.services.kinesisanalytics.runtime.KinesisAnalyticsRuntime;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -59,12 +63,27 @@ public class AnalyzingJob {
 
     private static final String PROP_RESPONSE_TOPIC = "response-topic";
 
-    public static void main(String[] args) throws Exception {
-        ParameterTool parameters = ParameterTool.fromArgs(args);
-        final String bootstrapServers = parameters.get(PROP_BOOTSTRAP_SERVERS);
-        final String requestTopic = parameters.get(PROP_REQUEST_TOPIC);
-        final String responseTopic = parameters.get(PROP_RESPONSE_TOPIC);
+    private static final String PROP_NAME = "consumerConfigProperties";
 
+    public static void main(String[] args) throws Exception {
+
+        ParameterTool parameters = ParameterTool.fromArgs(args);
+        String bootstrapServers = parameters.get(PROP_BOOTSTRAP_SERVERS);
+        String requestTopic = parameters.get(PROP_REQUEST_TOPIC);
+        String responseTopic = parameters.get(PROP_RESPONSE_TOPIC);
+        
+        final Map<String, Properties> applicationProperties = KinesisAnalyticsRuntime.getApplicationProperties();
+        final String mskBootstrapServers = (String) applicationProperties.get(PROP_NAME).get(
+            "bootstrapServers");
+        final String mskRequestTopic = (String) applicationProperties.get(PROP_NAME).get(
+            "requestTopic");
+        final String mskResponseTopic = (String) applicationProperties.get(PROP_NAME).get(
+            "responseTopic");
+
+        bootstrapServers = mskBootstrapServers != null ? mskBootstrapServers : bootstrapServers;
+        requestTopic = mskRequestTopic != null ? mskRequestTopic : requestTopic;
+        responseTopic = mskResponseTopic != null ? mskResponseTopic : responseTopic;
+        
         KafkaSource<JsonNode> source = KafkaSource.<JsonNode> builder()
                 .setBootstrapServers(bootstrapServers)
                 .setTopics(requestTopic)
@@ -79,7 +98,15 @@ public class AnalyzingJob {
 
         DataStream<JsonNode> stream = env.fromSource(source, WatermarkStrategy.noWatermarks(), "KafkaSource");
 
-        stream.map(json -> {
+        stream.map(transfromMessage(mapper))
+        .print();
+
+        // Execute program, beginning computation.
+        env.execute("Processor");
+    }
+
+    private static MapFunction<JsonNode, JsonNode> transfromMessage(final ObjectMapper mapper) {
+        return json -> {
             
             final ObjectNode mappedJson = mapper.createObjectNode();
 
@@ -105,24 +132,6 @@ public class AnalyzingJob {
                 }
             }
             return (JsonNode) mappedJson;
-        })
-        .print();
-        /*
-         * Here, you can start creating your execution plan for Flink.
-         *
-         * Start with getting some data from the environment, like env.fromSequence(1,
-         * 10);
-         *
-         * then, transform the resulting DataStream<Long> using operations like
-         * .filter() .flatMap() .window() .process()
-         *
-         * and many more. Have a look at the programming guide:
-         *
-         * https://nightlies.apache.org/flink/flink-docs-stable/
-         *
-         */
-
-        // Execute program, beginning computation.
-        env.execute("Text Uppercase Processor");
+        };
     }
 }
