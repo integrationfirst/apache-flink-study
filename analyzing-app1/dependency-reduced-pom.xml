@@ -114,7 +114,7 @@
     <dependency>
       <groupId>org.apache.flink</groupId>
       <artifactId>flink-streaming-java_2.12</artifactId>
-      <version>1.13.6</version>
+      <version>1.13.2</version>
       <scope>provided</scope>
       <exclusions>
         <exclusion>
@@ -126,7 +126,7 @@
     <dependency>
       <groupId>org.apache.flink</groupId>
       <artifactId>flink-test-utils_2.12</artifactId>
-      <version>1.13.6</version>
+      <version>1.13.2</version>
       <scope>test</scope>
       <exclusions>
         <exclusion>
@@ -167,12 +167,12 @@
     </dependency>
   </dependencies>
   <properties>
-    <target.java.version>1.8</target.java.version>
     <scala.binary.version>2.12</scala.binary.version>
-    <log4j.version>2.17.1</log4j.version>
-    <flink.version>1.13.6</flink.version>
+    <maven.compiler.target>${target.java.version}</maven.compiler.target>
     <maven.compiler.source>${target.java.version}</maven.compiler.source>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.target>${target.java.version}</maven.compiler.target>
+    <log4j.version>2.17.1</log4j.version>
+    <target.java.version>1.8</target.java.version>
+    <flink.version>1.13.2</flink.version>
   </properties>
 </project>

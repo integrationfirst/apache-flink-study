@@ -24,12 +24,15 @@ import java.util.Properties;
 
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
 import org.apache.flink.connector.kafka.source.reader.deserializer.KafkaRecordDeserializationSchema;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer;
+import org.apache.flink.streaming.connectors.kafka.internals.KeyedSerializationSchemaWrapper;
 
 import com.amazonaws.services.kinesisanalytics.runtime.KinesisAnalyticsRuntime;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -63,7 +66,9 @@ public class AnalyzingJob {
 
     private static final String PROP_RESPONSE_TOPIC = "response-topic";
 
-    private static final String PROP_NAME = "consumerConfigProperties";
+    private static final String CONSUMER_PROP_NAME = "consumerConfigProperties";
+
+    private static final String PRODUCER_PROP_NAME = "producerConfigProperties";
 
     public static void main(String[] args) throws Exception {
 
@@ -73,24 +78,28 @@ public class AnalyzingJob {
         String responseTopic = parameters.get(PROP_RESPONSE_TOPIC);
         
         final Map<String, Properties> applicationProperties = KinesisAnalyticsRuntime.getApplicationProperties();
-        final String mskBootstrapServers = (String) applicationProperties.get(PROP_NAME).get(
-            "bootstrapServers");
-        final String mskRequestTopic = (String) applicationProperties.get(PROP_NAME).get(
-            "requestTopic");
-        final String mskResponseTopic = (String) applicationProperties.get(PROP_NAME).get(
-            "responseTopic");
-
-        bootstrapServers = mskBootstrapServers != null ? mskBootstrapServers : bootstrapServers;
-        requestTopic = mskRequestTopic != null ? mskRequestTopic : requestTopic;
-        responseTopic = mskResponseTopic != null ? mskResponseTopic : responseTopic;
         
+        if(applicationProperties != null && !applicationProperties.isEmpty()) {
+            final String mskBootstrapServers = (String) applicationProperties.get(CONSUMER_PROP_NAME).get(
+                    "bootstrapServers");
+            final String mskRequestTopic = (String) applicationProperties.get(CONSUMER_PROP_NAME).get(
+                    "requestTopic");
+            final String mskResponseTopic = (String) applicationProperties.get(PRODUCER_PROP_NAME).get(
+                    "responseTopic");
+            bootstrapServers = mskBootstrapServers != null ? mskBootstrapServers : bootstrapServers;
+            requestTopic = mskRequestTopic != null ? mskRequestTopic : requestTopic;
+            responseTopic = mskResponseTopic != null ? mskResponseTopic : responseTopic;
+        }
         KafkaSource<JsonNode> source = KafkaSource.<JsonNode> builder()
-                .setBootstrapServers(bootstrapServers)
+                .setBootstrapServers("b-2.msk-shared.2aa5u6.c5.kafka.eu-central-1.amazonaws.com:9094")
                 .setTopics(requestTopic)
                 .setGroupId("rd-flink")
                 .setStartingOffsets(OffsetsInitializer.earliest())
                 .setDeserializer(KafkaRecordDeserializationSchema.valueOnly(JsonDeserializer.class))
                 .build();
+        
+        FlinkKafkaProducer<String> sink = new FlinkKafkaProducer<>("b-2.msk-shared.2aa5u6.c5.kafka.eu-central-1.amazonaws.com:9094", responseTopic,
+            new KeyedSerializationSchemaWrapper(new SimpleStringSchema()));
 
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
@@ -99,13 +108,13 @@ public class AnalyzingJob {
         DataStream<JsonNode> stream = env.fromSource(source, WatermarkStrategy.noWatermarks(), "KafkaSource");
 
         stream.map(transfromMessage(mapper))
-        .print();
+        .addSink(sink);
 
         // Execute program, beginning computation.
         env.execute("Processor");
     }
 
-    private static MapFunction<JsonNode, JsonNode> transfromMessage(final ObjectMapper mapper) {
+    private static MapFunction<JsonNode, String> transfromMessage(final ObjectMapper mapper) {
         return json -> {
             
             final ObjectNode mappedJson = mapper.createObjectNode();
@@ -131,7 +140,7 @@ public class AnalyzingJob {
                     ((ArrayNode) arrayNode).add(fileUrl);
                 }
             }
-            return (JsonNode) mappedJson;
+            return mappedJson.toString();
         };
     }
 }
