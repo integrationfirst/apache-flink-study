@@ -48,14 +48,14 @@
 
 	<dependencies>
 		<!-- Apache Flink dependencies -->
-	<!-- These dependencies are provided, because they should not be packaged 
-		into the JAR file. -->
-	<dependency>
-		<groupId>org.apache.flink</groupId>
-		<artifactId>flink-streaming-java_2.12</artifactId>
-		<version>1.13.6</version>
-		<scope>provided</scope>
-	</dependency>
+		<!-- These dependencies are provided, because they should not be packaged 
+			into the JAR file. -->
+		<dependency>
+			<groupId>org.apache.flink</groupId>
+			<artifactId>flink-streaming-java_2.12</artifactId>
+			<version>1.13.6</version>
+			<scope>provided</scope>
+		</dependency>
 
 		<dependency>
 			<groupId>org.apache.flink</groupId>
@@ -87,6 +87,13 @@
 			<artifactId>flink-connector-kafka_2.12</artifactId>
 			<version>${flink.version}</version>
 		</dependency>
+
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-kinesisanalytics-runtime</artifactId>
+			<version>1.2.0</version>
+		</dependency>
+
 		<!-- Add connector dependencies here. They must be in the default scope 
 			(compile). -->
 
