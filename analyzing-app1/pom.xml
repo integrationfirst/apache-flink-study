@@ -15,7 +15,7 @@
 
 	<groupId>vn.ifa.study.flink</groupId>
 	<artifactId>analyzing-app1</artifactId>
-	<version>0.0.1</version>
+	<version>0.2.2</version>
 	<packaging>jar</packaging>
 
 	<name>Flink Quickstart Job</name>
@@ -23,11 +23,13 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<flink.version>1.13.2</flink.version>
-		<target.java.version>1.11</target.java.version>
+		<target.java.version>1.8</target.java.version>
 		<scala.binary.version>2.12</scala.binary.version>
 		<maven.compiler.source>${target.java.version}</maven.compiler.source>
 		<maven.compiler.target>${target.java.version}</maven.compiler.target>
 		<log4j.version>2.17.1</log4j.version>
+		<kda.version>2.0.0</kda.version>
+		<kda.runtime.version>1.2.0</kda.runtime.version>
 	</properties>
 
 	<repositories>
@@ -45,9 +47,8 @@
 			</snapshots>
 		</repository>
 	</repositories>
-
 	<dependencies>
-		
+
 		<dependency>
 			<groupId>org.apache.flink</groupId>
 			<artifactId>flink-streaming-java_2.12</artifactId>
@@ -121,31 +122,6 @@
 			<groupId>com.jayway.jsonpath</groupId>
 			<artifactId>json-path</artifactId>
 			<version>2.7.0</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.apache.flink</groupId>
-			<artifactId>flink-connector-kinesis_${scala.binary.version}</artifactId>
-			<version>${flink.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.apache.flink</groupId>
-			<artifactId>flink-streaming-java_${scala.binary.version}</artifactId>
-			<version>${flink.version}</version>
-			<scope>provided</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>com.amazonaws</groupId>
-			<artifactId>aws-kinesisanalytics-flink</artifactId>
-			<version>${kda.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.amazonaws</groupId>
-			<artifactId>aws-java-sdk-logs</artifactId>
-			<!-- scope>compile</scope -->
 		</dependency>
 
 	</dependencies>
