@@ -72,9 +72,16 @@ public class AnalyzingJob {
     public static void main(String[] args) throws Exception {
 
         final Map<String, Properties> applicationProperties = KinesisAnalyticsRuntime.getApplicationProperties();
-        final Properties consumerProperties = applicationProperties.get(CONSUMER_PROPERTIES);
-        final Properties producerProperties = applicationProperties.get(PRODUCER_PROPERTIES);
+         Properties consumerProperties = applicationProperties.get(CONSUMER_PROPERTIES);
+         Properties producerProperties = applicationProperties.get(PRODUCER_PROPERTIES);
 
+        if (consumerProperties==null){
+            consumerProperties=new Properties();
+            consumerProperties.setProperty("group.id","flinker");
+        }
+        if (producerProperties==null){
+            producerProperties=new Properties();
+        }
         processArgs(args, consumerProperties,CONSUMER_PROPERTIES);
         processArgs(args,producerProperties,PRODUCER_PROPERTIES);
 
@@ -98,6 +105,9 @@ public class AnalyzingJob {
     }
 
     private static void processArgs(String[] args, Properties props, String prefix) {
+        if (args==null || args.length<=0){
+            return;
+        }
         ParameterTool parameters = ParameterTool.fromArgs(args);
         String bt = parameters.get(PROP_BOOTSTRAP_SERVERS);
         props.setProperty(BOOTSTRAP_SERVERS,bt);
