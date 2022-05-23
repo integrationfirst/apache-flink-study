@@ -25,6 +25,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import com.amazonaws.services.kinesisanalytics.flink.connectors.producer.FlinkKinesisFirehoseProducer;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.java.utils.ParameterTool;
@@ -68,12 +69,16 @@ public class AnalyzingJob {
     public static final String CONSUMER_PROPERTIES = "consumerProperties";
     public static final String PRODUCER_PROPERTIES = "producerProperties";
     public static final String BOOTSTRAP_SERVERS = "bootstrap.servers";
+    private static final String OUTPUT_PROPERTIES = "outputProperties";
+    private static final String FIREHOSE_PROPERTIES = "firehoseProperties";
 
     public static void main(String[] args) throws Exception {
 
         final Map<String, Properties> applicationProperties = KinesisAnalyticsRuntime.getApplicationProperties();
          Properties consumerProperties = applicationProperties.get(CONSUMER_PROPERTIES);
          Properties producerProperties = applicationProperties.get(PRODUCER_PROPERTIES);
+         Properties outputProperties = applicationProperties.get(OUTPUT_PROPERTIES);
+        Properties firehoseProperties = applicationProperties.get(FIREHOSE_PROPERTIES);
 
         if (consumerProperties==null){
             consumerProperties=new Properties();
@@ -93,10 +98,21 @@ public class AnalyzingJob {
                 .setDeserializer(KafkaRecordDeserializationSchema.valueOnly(deser))
                 .build();
 
-        final FlinkKafkaProducer<String> producer = new FlinkKafkaProducer<String>(producerProperties.getProperty(PROP_TOPIC)
-                , deser,producerProperties);
-
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+        final String sink = outputProperties.getProperty("sink");
+        if ("FIREHOSE".equalsIgnoreCase(sink)){
+            
+            FlinkKinesisFirehoseProducer<String> sink = new FlinkKinesisFirehoseProducer<>("outputDeliveryStreamName", deser, firehoseProperties);
+        }else {
+            final FlinkKafkaProducer<String> producer = new FlinkKafkaProducer<String>(producerProperties.getProperty(PROP_TOPIC)
+                    , deser,producerProperties);
+        }
+
+
+
+
+
 
          env.fromSource(source, WatermarkStrategy.noWatermarks(), "KafkaSource")
                         .addSink(producer);

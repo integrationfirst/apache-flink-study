@@ -29,6 +29,8 @@
 		<maven.compiler.target>${target.java.version}</maven.compiler.target>
 		<log4j.version>2.17.2</log4j.version>
 		<jackson.version>2.13.3</jackson.version>
+		<kda.version>2.0.0</kda.version>
+		<kda.runtime.version>1.2.0</kda.runtime.version>
 	</properties>
 
 	<repositories>
@@ -92,9 +94,13 @@
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-kinesisanalytics-runtime</artifactId>
-			<version>1.2.0</version>
+			<version>${kda.runtime.version}</version>
 		</dependency>
-
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-kinesisanalytics-flink</artifactId>
+			<version>${kda.version}</version>
+		</dependency>
 		<!-- Add connector dependencies here. They must be in the default scope 
 			(compile). -->
 
