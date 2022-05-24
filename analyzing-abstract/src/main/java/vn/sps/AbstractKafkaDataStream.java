@@ -19,37 +19,32 @@ import java.util.Properties;
 import org.apache.flink.api.connector.source.Source;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.connector.kafka.source.KafkaSource;
-import org.apache.flink.connector.kafka.source.reader.deserializer.KafkaRecordDeserializationSchema;
 
 import com.amazonaws.services.kinesisanalytics.runtime.KinesisAnalyticsRuntime;
 
-public abstract class AbstractKafkaDataStream extends AbstractDataStream{
+public abstract class AbstractKafkaDataStream<T> extends AbstractDataStream {
 
-    private static final String CONSUMER_PROPERTIES = "consumerProperties";
+    private static final String CONSUMER_PROPERTIES_GROUP = "consumerProperties";
 
-    private static final String PRODUCER_PROPERTIES = "producerProperties";
+    private Properties argsProperties;
     
-    private Properties consumerProperties;
-    
-    private Properties producerProperties;
+    private Map<String, Properties> applicationProperties;
     
     public AbstractKafkaDataStream(String[] args) throws IOException {
-        
-        final Map<String, Properties> applicationProperties = KinesisAnalyticsRuntime.getApplicationProperties();
-        
-        final ParameterTool parameters = ParameterTool.fromArgs(args);
-        final Properties argsProperties = parameters.getProperties();
-        
-        consumerProperties = extractProperties(applicationProperties, argsProperties, CONSUMER_PROPERTIES);
+        this.argsProperties = ParameterTool.fromArgs(args).getProperties();
+        this.applicationProperties = KinesisAnalyticsRuntime.getApplicationProperties();
+    }
+    
+    @Override
+    protected Properties getSourceProperties() {
+        return extractProperties(applicationProperties, argsProperties, CONSUMER_PROPERTIES_GROUP);
     }
 
-    protected abstract <T> KafkaRecordDeserializationSchema<T> deserializationSchema();
-
+    @SuppressWarnings("unchecked")
     @Override
-    protected <T> Source<T, ?, ?> getSource() {
+    protected Source<T, ?, ?> getSource() {
         return KafkaSource.<T> builder()
-                .setDeserializer(deserializationSchema())
-                .setProperties(consumerProperties)
+                .setProperties(getSourceProperties())
                 .build();
     }
 }

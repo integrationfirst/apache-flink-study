@@ -14,6 +14,6 @@ package vn.sps;
 
 public interface DataAnalyzer {
 
-    void analyze();
+    void analyze() throws Exception;
     
 }

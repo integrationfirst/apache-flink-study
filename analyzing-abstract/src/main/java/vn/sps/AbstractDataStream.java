@@ -13,33 +13,45 @@
 package vn.sps;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.connector.source.Source;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 
 abstract class AbstractDataStream {
 
-    protected abstract <T> WatermarkStrategy<T> getWatermarkStrategy();
+    protected abstract <IN> Source<IN, ?, ?> getSource();
 
-    protected abstract <T> Source<T, ?, ?> getSource();
+    protected abstract <T> WatermarkStrategy<T> getWatermarkStrategy();
 
     protected abstract String getSourceName();
     
     protected abstract Properties getSourceProperties();
     
     protected abstract Properties getSinkProperties();
+    
+    protected abstract <OUT> SinkFunction<OUT> getSink();
 
-    public void execute() throws Exception {
+    protected void execute() throws Exception {
 
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
         final DataStream<?> stream = env.fromSource(getSource(), getWatermarkStrategy(), getSourceName());
         execute(stream);
-
+        
+        if(Objects.nonNull(getSink())) {
+            // add a custom sink
+            stream.addSink(getSink());
+        }
+        else {
+            // write to s3
+            stream.writeToSocket("", 456, null);
+        }
         env.execute();
     }
 
