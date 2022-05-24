@@ -19,7 +19,7 @@ import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.connector.source.Source;
 import org.apache.flink.connector.kafka.source.KafkaSource;
 
-public abstract class AbstractKafkaDataStream<T> extends AbstractS3Sink implements DataAnalyzer{
+public abstract class AbstractKafkaDataStream<T> extends AbstractS3Sink<T> implements DataAnalyzer{
 
     private static final String CONSUMER_PROPERTIES_GROUP = "consumerProperties";
     

@@ -23,36 +23,33 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 
-abstract class AbstractDataStream {
+abstract class AbstractDataStream<T> {
 
-    @SuppressWarnings("rawtypes")
-    protected abstract Source getSource();
+    protected abstract Source<T, ?, ?> getSource();
 
     @SuppressWarnings("rawtypes")
     protected abstract WatermarkStrategy getWatermarkStrategy();
 
     protected abstract String getSourceName();
-    
+
     protected abstract Properties getSourceProperties();
-    
+
     protected abstract Properties getSinkProperties();
-    
-    @SuppressWarnings("rawtypes")
-    protected abstract SinkFunction getSink();
+
+    protected abstract SinkFunction<T> getSink();
 
     @SuppressWarnings("unchecked")
     protected void execute() throws Exception {
 
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
-        final DataStream<?> stream = env.fromSource(getSource(), getWatermarkStrategy(), getSourceName());
+        final DataStream<T> stream = env.fromSource(getSource(), getWatermarkStrategy(), getSourceName());
         execute(stream);
-        
-        if(Objects.nonNull(getSink())) {
+
+        if (Objects.nonNull(getSink())) {
             // add a custom sink
             stream.addSink(getSink());
-        }
-        else {
+        } else {
             // write to s3
             stream.writeToSocket("", 456, null);
         }
@@ -79,6 +76,6 @@ abstract class AbstractDataStream {
         }
         return properties;
     }
-    
+
     protected abstract void execute(DataStream<?> dataStream);
 }

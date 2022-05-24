@@ -21,7 +21,7 @@ import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 
 import com.amazonaws.services.kinesisanalytics.runtime.KinesisAnalyticsRuntime;
 
-abstract class AbstractS3Sink extends AbstractDataStream{
+abstract class AbstractS3Sink<T> extends AbstractDataStream<T>{
 
     protected Properties argsProperties;
     
@@ -37,9 +37,8 @@ abstract class AbstractS3Sink extends AbstractDataStream{
         return null;
     }
 
-    @SuppressWarnings("rawtypes")
     @Override
-    protected SinkFunction getSink() {
+    protected SinkFunction<T> getSink() {
         return null;
     }
 }
