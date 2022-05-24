@@ -37,8 +37,9 @@ abstract class AbstractS3Sink extends AbstractDataStream{
         return null;
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
-    protected <OUT> SinkFunction<OUT> getSink() {
+    protected SinkFunction getSink() {
         return null;
     }
 }

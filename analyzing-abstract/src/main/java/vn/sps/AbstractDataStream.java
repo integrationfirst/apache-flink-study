@@ -25,7 +25,8 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 
 abstract class AbstractDataStream {
 
-    protected abstract <IN> Source<IN, ?, ?> getSource();
+    @SuppressWarnings("rawtypes")
+    protected abstract Source getSource();
 
     protected abstract <T> WatermarkStrategy<T> getWatermarkStrategy();
 
@@ -35,8 +36,10 @@ abstract class AbstractDataStream {
     
     protected abstract Properties getSinkProperties();
     
-    protected abstract <OUT> SinkFunction<OUT> getSink();
+    @SuppressWarnings("rawtypes")
+    protected abstract SinkFunction getSink();
 
+    @SuppressWarnings("unchecked")
     protected void execute() throws Exception {
 
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
