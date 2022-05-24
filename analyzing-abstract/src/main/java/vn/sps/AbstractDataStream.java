@@ -28,7 +28,8 @@ abstract class AbstractDataStream {
     @SuppressWarnings("rawtypes")
     protected abstract Source getSource();
 
-    protected abstract <T> WatermarkStrategy<T> getWatermarkStrategy();
+    @SuppressWarnings("rawtypes")
+    protected abstract WatermarkStrategy getWatermarkStrategy();
 
     protected abstract String getSourceName();
     

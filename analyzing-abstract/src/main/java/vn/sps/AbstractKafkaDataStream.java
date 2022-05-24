@@ -32,7 +32,7 @@ public abstract class AbstractKafkaDataStream<T> extends AbstractS3Sink implemen
         return extractProperties(applicationProperties, argsProperties, CONSUMER_PROPERTIES_GROUP);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "rawtypes" })
     @Override
     protected WatermarkStrategy getWatermarkStrategy() {
         return null;
