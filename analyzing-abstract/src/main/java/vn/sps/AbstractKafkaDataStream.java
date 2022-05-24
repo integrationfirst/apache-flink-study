@@ -22,7 +22,7 @@ import org.apache.flink.connector.kafka.source.KafkaSource;
 
 import com.amazonaws.services.kinesisanalytics.runtime.KinesisAnalyticsRuntime;
 
-public abstract class AbstractKafkaDataStream<T> extends AbstractDataStream {
+public abstract class AbstractKafkaDataStream<T> extends AbstractS3Sink implements DataAnalyzer{
 
     private static final String CONSUMER_PROPERTIES_GROUP = "consumerProperties";
 
@@ -46,5 +46,10 @@ public abstract class AbstractKafkaDataStream<T> extends AbstractDataStream {
         return KafkaSource.<T> builder()
                 .setProperties(getSourceProperties())
                 .build();
+    }
+
+    @Override
+    public void analyze() throws Exception {
+        execute();
     }
 }
