@@ -13,27 +13,18 @@
 package vn.sps;
 
 import java.io.IOException;
-import java.util.Map;
 import java.util.Properties;
 
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.connector.source.Source;
-import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.connector.kafka.source.KafkaSource;
-
-import com.amazonaws.services.kinesisanalytics.runtime.KinesisAnalyticsRuntime;
 
 public abstract class AbstractKafkaDataStream<T> extends AbstractS3Sink implements DataAnalyzer{
 
     private static final String CONSUMER_PROPERTIES_GROUP = "consumerProperties";
-
-    private Properties argsProperties;
-    
-    private Map<String, Properties> applicationProperties;
     
     public AbstractKafkaDataStream(String[] args) throws IOException {
-        this.argsProperties = ParameterTool.fromArgs(args).getProperties();
-        this.applicationProperties = KinesisAnalyticsRuntime.getApplicationProperties();
+        super(args);
     }
     
     @Override
