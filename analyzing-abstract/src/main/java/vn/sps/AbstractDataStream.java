@@ -12,10 +12,14 @@
  */
 package vn.sps;
 
+import java.util.Map;
+import java.util.Properties;
+
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.connector.source.Source;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 
 abstract class AbstractDataStream {
 
@@ -24,6 +28,10 @@ abstract class AbstractDataStream {
     protected abstract <T> Source<T, ?, ?> getSource();
 
     protected abstract String getSourceName();
+    
+    protected abstract Properties getSourceProperties();
+    
+    protected abstract Properties getSinkProperties();
 
     public void execute() throws Exception {
 
@@ -35,5 +43,26 @@ abstract class AbstractDataStream {
         env.execute();
     }
 
+    Properties extractProperties(
+        final Map<String, Properties> applicationProperties,
+        final Properties argsProperties,
+        final String propertyGroup) {
+
+        Properties properties = new Properties();
+        if (applicationProperties.get(propertyGroup) != null) {
+            properties.putAll(applicationProperties.get(propertyGroup));
+        } else {
+            for (String configName : ConsumerConfig.configNames()) {
+                final StringBuilder builder = new StringBuilder();
+                final String fullConfigName = builder.append(propertyGroup).append(configName).toString();
+
+                if (argsProperties.contains(fullConfigName)) {
+                    properties.put(configName, argsProperties.get(fullConfigName));
+                }
+            }
+        }
+        return properties;
+    }
+    
     protected abstract void execute(DataStream<?> dataStream);
 }
