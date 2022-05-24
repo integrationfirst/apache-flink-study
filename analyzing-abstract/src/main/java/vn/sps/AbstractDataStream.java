@@ -77,5 +77,5 @@ abstract class AbstractDataStream<T> {
         return properties;
     }
 
-    protected abstract void execute(DataStream<?> dataStream);
+    protected abstract void execute(DataStream<T> dataStream);
 }

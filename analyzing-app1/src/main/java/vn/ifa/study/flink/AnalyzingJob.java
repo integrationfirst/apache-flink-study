@@ -105,7 +105,7 @@ public class AnalyzingJob {
         env.execute("Processor");
     }
 
-    private static MapFunction<JsonNode, JsonNode> transfromMessage(final ObjectMapper mapper) {
+    private static MapFunction<JsonNode, String> transfromMessage(final ObjectMapper mapper) {
         return json -> {
             
             final ObjectNode mappedJson = mapper.createObjectNode();
@@ -131,7 +131,7 @@ public class AnalyzingJob {
                     ((ArrayNode) arrayNode).add(fileUrl);
                 }
             }
-            return (JsonNode) mappedJson;
+            return "";
         };
     }
 }
