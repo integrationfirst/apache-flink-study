@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.connector.source.Source;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.connector.kafka.source.KafkaSource;
@@ -40,7 +41,16 @@ public abstract class AbstractKafkaDataStream<T> extends AbstractS3Sink implemen
         return extractProperties(applicationProperties, argsProperties, CONSUMER_PROPERTIES_GROUP);
     }
 
-    @SuppressWarnings("unchecked")
+    @Override
+    protected <T> WatermarkStrategy<T> getWatermarkStrategy() {
+        return null;
+    }
+
+    @Override
+    protected String getSourceName() {
+        return null;
+    }
+
     @Override
     protected Source<T, ?, ?> getSource() {
         return KafkaSource.<T> builder()

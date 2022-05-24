@@ -12,6 +12,19 @@
  */
 package vn.sps;
 
+import java.util.Properties;
+
+import org.apache.flink.streaming.api.functions.sink.SinkFunction;
+
 abstract class AbstractS3Sink extends AbstractDataStream{
 
+    @Override
+    protected Properties getSinkProperties() {
+        return null;
+    }
+
+    @Override
+    protected <OUT> SinkFunction<OUT> getSink() {
+        return null;
+    }
 }
