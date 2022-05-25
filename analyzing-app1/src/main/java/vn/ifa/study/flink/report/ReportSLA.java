@@ -22,12 +22,12 @@ import vn.sps.AbstractDataStream;
 
 public class ReportSLA extends AbstractDataStream<JsonNode>{
 
-    protected ReportSLA(String[] args) throws IOException {
+    public ReportSLA(String[] args) throws IOException {
         super(args);
     }
 
     @Override
     protected void execute(DataStream<JsonNode> dataStream) {
-                
+        dataStream.map(json -> json);
     }
 }

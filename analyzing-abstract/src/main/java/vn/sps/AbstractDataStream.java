@@ -108,7 +108,7 @@ public abstract class AbstractDataStream<IN> implements AnalyzingJob{
     
     private void extractKeys(final Properties localProperties, String fullKey, final String group, final String defaultGroupName) {
         if (group.equals(defaultGroupName)) {
-            String key = fullKey.substring(fullKey.indexOf("."));
+            String key = fullKey.substring(fullKey.indexOf(".") + 1);
             Object value = localProperties.get(fullKey);
             this.sourceProperties.put(key, value);
         }

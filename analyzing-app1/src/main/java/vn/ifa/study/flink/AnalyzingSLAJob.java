@@ -18,6 +18,9 @@
 
 package vn.ifa.study.flink;
 
+import vn.ifa.study.flink.report.ReportSLA;
+import vn.sps.AnalyzingJob;
+
 /**
  * Skeleton for a Flink DataStream Job.
  *
@@ -34,9 +37,11 @@ package vn.ifa.study.flink;
  * main(String[] args)) method, change the respective entry in the POM.xml file
  * (simply search for 'mainClass').
  */
-public class AnalyzingJob {
+public class AnalyzingSLAJob {
 
     public static void main(String[] args) throws Exception {
-        
+
+        AnalyzingJob job = new ReportSLA(args);
+        job.analyze();
     }
 }

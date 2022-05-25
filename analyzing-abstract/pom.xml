@@ -7,9 +7,9 @@
 				<groupId>vn.sps</groupId>
 				<artifactId>analyzing-parent</artifactId>
 				<version>0.0.0.1</version>
+				<relativePath />
 		</parent>
 		
-		<groupId>vn.sps</groupId>
 		<artifactId>analyzing-abstract</artifactId>
 		<version>0.0.0.1</version>
 		<packaging>jar</packaging>

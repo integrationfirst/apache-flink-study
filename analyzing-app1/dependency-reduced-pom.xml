@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <artifactId>analyzing-parent</artifactId>
+    <groupId>vn.sps</groupId>
+    <version>0.0.0.1</version>
+    <relativePath>../pom.xml/pom.xml</relativePath>
+  </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>vn.ifa.study.flink</groupId>
   <artifactId>analyzing-app1</artifactId>
@@ -97,40 +103,31 @@
       </plugin>
     </plugins>
   </build>
-  <repositories>
-    <repository>
-      <releases>
-        <enabled>false</enabled>
-        <updatePolicy>always</updatePolicy>
-        <checksumPolicy>warn</checksumPolicy>
-      </releases>
-      <snapshots />
-      <id>apache.snapshots</id>
-      <name>Apache Development Snapshot Repository</name>
-      <url>https://repo1.maven.org/maven2</url>
-    </repository>
-  </repositories>
   <dependencies>
     <dependency>
       <groupId>org.apache.flink</groupId>
-      <artifactId>flink-streaming-java_2.12</artifactId>
-      <version>1.13.6</version>
+      <artifactId>flink-java</artifactId>
+      <version>1.13.2</version>
       <scope>provided</scope>
       <exclusions>
         <exclusion>
-          <artifactId>flink-file-sink-common</artifactId>
+          <artifactId>flink-core</artifactId>
           <groupId>org.apache.flink</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>commons-math3</artifactId>
+          <groupId>org.apache.commons</groupId>
         </exclusion>
       </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.flink</groupId>
-      <artifactId>flink-test-utils_2.12</artifactId>
-      <version>1.13.6</version>
-      <scope>test</scope>
+      <artifactId>flink-streaming-java_2.12</artifactId>
+      <version>1.13.2</version>
+      <scope>provided</scope>
       <exclusions>
         <exclusion>
-          <artifactId>flink-test-utils-junit</artifactId>
+          <artifactId>flink-file-sink-common</artifactId>
           <groupId>org.apache.flink</groupId>
         </exclusion>
         <exclusion>
@@ -138,41 +135,63 @@
           <groupId>org.apache.flink</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>junit</artifactId>
-          <groupId>junit</groupId>
+          <artifactId>flink-shaded-guava</artifactId>
+          <groupId>org.apache.flink</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>curator-test</artifactId>
-          <groupId>org.apache.curator</groupId>
+          <artifactId>flink-core</artifactId>
+          <groupId>org.apache.flink</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>commons-math3</artifactId>
+          <groupId>org.apache.commons</groupId>
         </exclusion>
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-slf4j-impl</artifactId>
-      <version>2.17.1</version>
-      <scope>runtime</scope>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-clients_2.12</artifactId>
+      <version>1.13.2</version>
+      <scope>provided</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>flink-optimizer_2.12</artifactId>
+          <groupId>org.apache.flink</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>commons-cli</artifactId>
+          <groupId>commons-cli</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>flink-runtime_2.12</artifactId>
+          <groupId>org.apache.flink</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>flink-core</artifactId>
+          <groupId>org.apache.flink</groupId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-api</artifactId>
-      <version>2.17.1</version>
-      <scope>runtime</scope>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-core</artifactId>
+      <version>1.2.11</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-core</artifactId>
-      <version>2.17.1</version>
-      <scope>runtime</scope>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.25</version>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
   <properties>
-    <target.java.version>1.8</target.java.version>
     <scala.binary.version>2.12</scala.binary.version>
-    <log4j.version>2.17.1</log4j.version>
-    <flink.version>1.13.6</flink.version>
+    <maven.compiler.target>${target.java.version}</maven.compiler.target>
     <maven.compiler.source>${target.java.version}</maven.compiler.source>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.target>${target.java.version}</maven.compiler.target>
+    <log4j.version>2.17.1</log4j.version>
+    <target.java.version>1.8</target.java.version>
+    <flink.version>1.13.2</flink.version>
   </properties>
 </project>
