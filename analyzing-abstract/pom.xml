@@ -6,7 +6,7 @@
 		<groupId>vn.sps</groupId>
 		<artifactId>analyzing-abstract</artifactId>
 		<version>0.0.0.1</version>
-		<packaging>jar</packaging>
+		<packaging>pom</packaging>
 
 		<name>Abstract Flink Job</name>
 
