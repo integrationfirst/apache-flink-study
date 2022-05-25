@@ -3,8 +3,8 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>vn.sps</groupId>
   <artifactId>analyzing-abstract</artifactId>
-  <name>Flink Quickstart Job</name>
-  <version>0.0.1</version>
+  <name>Abstract Flink Job</name>
+  <version>0.0.0.1</version>
   <build>
     <pluginManagement>
       <plugins>
@@ -166,21 +166,29 @@
       </exclusions>
     </dependency>
     <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-core</artifactId>
+      <version>1.2.11</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>1.7.30</version>
-      <scope>test</scope>
+      <version>1.7.25</version>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
   <dependencyManagement />
   <properties>
     <scala.binary.version>2.12</scala.binary.version>
     <maven.compiler.target>${target.java.version}</maven.compiler.target>
+    <kda.version>2.0.0</kda.version>
     <maven.compiler.source>${target.java.version}</maven.compiler.source>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <log4j.version>2.12.1</log4j.version>
     <jackson.version>2.13.3</jackson.version>
     <target.java.version>1.8</target.java.version>
     <flink.version>1.13.2</flink.version>
+    <kda.runtime.version>1.2.0</kda.runtime.version>
   </properties>
 </project>

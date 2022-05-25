@@ -24,6 +24,8 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.amazonaws.services.kinesisanalytics.runtime.KinesisAnalyticsRuntime;
 
@@ -32,6 +34,8 @@ import vn.sps.factory.SourceFactory;
 
 public abstract class AbstractDataStream<IN> implements AnalyzingJob{
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDataStream.class);
+    
     private static final String SOURCE_GROUP = "source";
 
     private static final String SOURCE_NAME = "sink";
@@ -55,8 +59,23 @@ public abstract class AbstractDataStream<IN> implements AnalyzingJob{
         this.sourceProperties = kinesisProperties.get(SOURCE_GROUP);
         this.sinkProperties = kinesisProperties.get(SINK_GROUP);
 
-        if(Objects.isNull(sourceProperties) || Objects.isNull(sinkProperties)) {
+        if (Objects.isNull(sourceProperties) || Objects.isNull(sinkProperties)) {
+
             // use local properties
+            if(localProperties.isEmpty()) {
+                throw new IllegalArgumentException("The program argments can not empty");
+            }
+            this.sourceProperties = new Properties();
+            this.sinkProperties = new Properties();
+            localProperties.keySet().forEach(element -> {
+
+                String fullKey = (String) element;
+                if (fullKey.length() > 1) {
+                    final String group = fullKey.substring(0, fullKey.indexOf("."));
+                    extractKeys(localProperties, fullKey, group, SOURCE_GROUP);
+                    extractKeys(localProperties, fullKey, group, SINK_GROUP);
+                }
+            });
         }
     }
     
@@ -68,7 +87,7 @@ public abstract class AbstractDataStream<IN> implements AnalyzingJob{
     @SuppressWarnings({ "unchecked", "rawtypes" })
     protected void execute() throws Exception {
         
-        final String sourceName = this.sourceProperties.getProperty(SOURCE_NAME);
+        final String sourceName = (String) getProperty(this.sourceProperties, SOURCE_NAME, "Source");
         
         final Source<IN, ?, ?> source = SourceFactory.createKafkaSource(sourceProperties);
         
@@ -83,27 +102,20 @@ public abstract class AbstractDataStream<IN> implements AnalyzingJob{
 
         env.execute();
     }
-
-    Properties extractProperties(
-        final Map<String, Properties> applicationProperties,
-        final Properties argsProperties,
-        final String propertyGroup) {
-
-        final Properties properties = new Properties();
-        
-        if (applicationProperties.get(propertyGroup) != null) {
-            properties.putAll(applicationProperties.get(propertyGroup));
-        } else {
-            for (String configName : ConsumerConfig.configNames()) {
-                final StringBuilder builder = new StringBuilder();
-                final String fullConfigName = builder.append(propertyGroup).append(configName).toString();
-
-                if (argsProperties.contains(fullConfigName)) {
-                    properties.put(configName, argsProperties.get(fullConfigName));
-                }
-            }
+    
+    Object getProperty(Properties properties, Object key, Object defaultValue) {
+        if (!properties.contains(key)) {
+            LOGGER.warn(String.format("Don't find the %s configuration. Use the default value %s", key, defaultValue));
         }
-        return properties;
+        return properties.getOrDefault(key, defaultValue);
+    }
+    
+    private void extractKeys(final Properties localProperties, String fullKey, final String group, final String defaultGroupName) {
+        if (group.equals(defaultGroupName)) {
+            String key = fullKey.substring(fullKey.indexOf("."));
+            Object value = localProperties.get(fullKey);
+            this.sourceProperties.put(key, value);
+        }
     }
 
     protected abstract void execute(DataStream<IN> dataStream);
