@@ -16,10 +16,18 @@ import java.util.Properties;
 
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 
+import com.amazonaws.services.kinesisanalytics.flink.connectors.producer.FlinkKinesisFirehoseProducer;
+import com.amazonaws.services.kinesisanalytics.flink.connectors.serialization.JsonSerializationSchema;
+
 public final class SinkFactory {
 
-    public static <T> SinkFunction<T> createFirehoseSink(Properties sinkProperties) {
-        return null;
+    private SinkFactory() {
     }
+    
+    public static <T> SinkFunction<T> createFirehoseSink(Properties sinkProperties) {
 
+        final String deliveryStream = sinkProperties.getProperty("deliveryStream");
+        return new FlinkKinesisFirehoseProducer<>(deliveryStream, new JsonSerializationSchema<>(), sinkProperties);
+    }
+    
 }

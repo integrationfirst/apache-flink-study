@@ -12,7 +12,7 @@
  */
 package vn.sps;
 
-public interface DataAnalyzer {
+public interface AnalyzingJob {
 
     void analyze() throws Exception;
     

@@ -30,22 +30,22 @@ import com.amazonaws.services.kinesisanalytics.runtime.KinesisAnalyticsRuntime;
 import vn.sps.factory.SinkFactory;
 import vn.sps.factory.SourceFactory;
 
-abstract class AbstractDataStream<IN> {
+public abstract class AbstractDataStream<IN> implements AnalyzingJob{
 
     private static final String SOURCE_GROUP = "source";
+
+    private static final String SOURCE_NAME = "sink";
 
     private static final String SINK_GROUP = "sink";
     
     @SuppressWarnings("rawtypes")
     protected abstract WatermarkStrategy getWatermarkStrategy();
 
-    protected abstract String getSourceName();
-    
     private Properties sourceProperties;
     
     private Properties sinkProperties;
     
-    public AbstractDataStream(String[] args) throws IOException {
+    protected AbstractDataStream(String[] args) throws IOException {
         
         final ParameterTool parameters = ParameterTool.fromArgs(args);
         final Properties localProperties = parameters.getProperties();
@@ -60,19 +60,26 @@ abstract class AbstractDataStream<IN> {
         }
     }
     
-    @SuppressWarnings("unchecked")
+    @Override
+    public void analyze() throws Exception {
+        execute();
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     protected void execute() throws Exception {
+        
+        final String sourceName = this.sourceProperties.getProperty(SOURCE_NAME);
         
         final Source<IN, ?, ?> source = SourceFactory.createKafkaSource(sourceProperties);
         
-        final SinkFunction<IN> sink = SinkFactory.createFirehoseSink(sinkProperties);
+        final SinkFunction sink = SinkFactory.createFirehoseSink(sinkProperties);
         
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
-        final DataStream<IN> stream = env.fromSource(source, getWatermarkStrategy(), getSourceName());
+        final DataStream<IN> stream = env.fromSource(source, getWatermarkStrategy(), sourceName);
 
-        final DataStream<IN> dataStream = execute(stream);
-        dataStream.addSink(sink);
+        execute(stream);
+        stream.addSink(sink);
 
         env.execute();
     }
@@ -99,5 +106,5 @@ abstract class AbstractDataStream<IN> {
         return properties;
     }
 
-    protected abstract DataStream<IN> execute(DataStream<IN> dataStream);
+    protected abstract void execute(DataStream<IN> dataStream);
 }

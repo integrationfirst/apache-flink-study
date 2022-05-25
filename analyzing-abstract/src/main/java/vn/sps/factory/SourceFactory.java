@@ -18,6 +18,9 @@ import org.apache.flink.connector.kafka.source.KafkaSource;
 
 public final class SourceFactory {
     
+    private SourceFactory() {
+    }
+    
     public static <T> KafkaSource<T> createKafkaSource(Properties properties) {
         return KafkaSource.<T> builder().setProperties(properties).build();
     }

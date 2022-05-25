@@ -5,10 +5,10 @@
 
 		<groupId>vn.sps</groupId>
 		<artifactId>analyzing-abstract</artifactId>
-		<version>0.0.1</version>
+		<version>0.0.0.1</version>
 		<packaging>jar</packaging>
 
-		<name>Flink Quickstart Job</name>
+		<name>Abstract Flink Job</name>
 
 		<properties>
 				<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -19,6 +19,8 @@
 				<maven.compiler.target>${target.java.version}</maven.compiler.target>
 				<log4j.version>2.12.1</log4j.version>
 				<jackson.version>2.13.3</jackson.version>
+				<kda.runtime.version>1.2.0</kda.runtime.version>
+				<kda.version>2.0.0</kda.version>
 		</properties>
 
 		<dependencyManagement>
@@ -27,12 +29,18 @@
 		</dependencyManagement>
 
 		<dependencies>
+				<!-- AWS dependencies -->
 				<dependency>
 						<groupId>com.amazonaws</groupId>
 						<artifactId>aws-kinesisanalytics-runtime</artifactId>
-						<version>1.2.0</version>
+						<version>${kda.runtime.version}</version>
 				</dependency>
-
+				<dependency>
+						<groupId>com.amazonaws</groupId>
+						<artifactId>aws-kinesisanalytics-flink</artifactId>
+						<version>${kda.version}</version>
+				</dependency>
+				
 				<dependency>
 						<groupId>com.fasterxml.jackson.core</groupId>
 						<artifactId>jackson-databind</artifactId>
@@ -68,13 +76,11 @@
 
 				<!-- Add connector dependencies here. They must be in the default scope 
 						(compile). -->
-
 				<dependency>
 						<groupId>org.apache.flink</groupId>
 						<artifactId>flink-connector-kafka_${scala.binary.version}</artifactId>
 						<version>${flink.version}</version>
 				</dependency>
-
 				<dependency>
 						<groupId>org.apache.flink</groupId>
 						<artifactId>flink-connector-kinesis_${scala.binary.version}</artifactId>
@@ -87,13 +93,13 @@
 						<groupId>ch.qos.logback</groupId>
 						<artifactId>logback-core</artifactId>
 						<version>1.2.11</version>
+						<scope>runtime</scope>
 				</dependency>
-
 				<dependency>
 						<groupId>org.slf4j</groupId>
 						<artifactId>slf4j-api</artifactId>
 						<version>1.7.30</version>
-						<scope>test</scope>
+						<scope>runtime</scope>
 				</dependency>
 		</dependencies>
 
