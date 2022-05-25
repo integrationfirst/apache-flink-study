@@ -41,9 +41,6 @@ public abstract class AbstractDataStream<IN> implements AnalyzingJob{
 
     private static final String SINK_GROUP = "sink";
     
-    @SuppressWarnings("rawtypes")
-    protected abstract WatermarkStrategy getWatermarkStrategy();
-
     private Properties sourceProperties;
     
     private Properties sinkProperties;
@@ -94,7 +91,7 @@ public abstract class AbstractDataStream<IN> implements AnalyzingJob{
         
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
-        final DataStream<IN> stream = env.fromSource(source, getWatermarkStrategy(), sourceName);
+        final DataStream<IN> stream = env.fromSource(source, WatermarkStrategy.noWatermarks(), sourceName);
 
         execute(stream);
         stream.addSink(sink);
