@@ -85,7 +85,7 @@ public abstract class AbstractDataStream<IN> implements AnalyzingJob{
         
         final String sourceName = (String) getProperty(this.sourceProperties, SOURCE_NAME, "Source");
         
-        final Source<IN, ?, ?> source = SourceFactory.createKafkaSource(sourceProperties);
+        final Source source = SourceFactory.createKafkaSource(sourceProperties);
         
         final SinkFunction sink = SinkFactory.createFirehoseSink(sinkProperties);
         
@@ -101,7 +101,8 @@ public abstract class AbstractDataStream<IN> implements AnalyzingJob{
     
     Object getProperty(Properties properties, Object key, Object defaultValue) {
         if (!properties.contains(key)) {
-            LOGGER.warn(String.format("Don't find the %s configuration. Use the default value %s", key, defaultValue));
+            LOGGER.warn("{}",
+                String.format("Don't find the %s configuration. Use the default value %s", key, defaultValue));
         }
         return properties.getOrDefault(key, defaultValue);
     }
