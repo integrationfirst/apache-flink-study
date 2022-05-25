@@ -82,7 +82,6 @@ public class AnalyzingJob {
 
         if (consumerProperties==null){
             consumerProperties=new Properties();
-            consumerProperties.setProperty("group.id","flinker");
         }
         if (producerProperties==null){
             producerProperties=new Properties();
@@ -99,12 +98,6 @@ public class AnalyzingJob {
                 .build();
 
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-
-//        final String streamDeliveryName = firehoseProperties.getProperty("streamDeliveryName");
-//        FlinkKinesisFirehoseProducer<String> firehoseProducer =
-//                  new FlinkKinesisFirehoseProducer<>(streamDeliveryName, deser, firehoseProperties);
-//        env.fromSource(source, WatermarkStrategy.noWatermarks(), "KafkaSource")
-//                .sinkTo(firehoseProducer,"")
 
         final String sink = outputProperties.getProperty("sink");
         if ("FIREHOSE".equalsIgnoreCase(sink)){
