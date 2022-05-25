@@ -15,7 +15,7 @@
 
 	<groupId>vn.ifa.study.flink</groupId>
 	<artifactId>analyzing-app2</artifactId>
-	<version>0.0.3</version>
+	<version>0.0.5</version>
 	<packaging>jar</packaging>
 
 	<name>Flink Quickstart Job</name>
@@ -50,6 +50,12 @@
 	</repositories>
 
 	<dependencies>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>1.18.24</version>
+			<scope>provided</scope>
+		</dependency>
 		<!-- Apache Flink dependencies -->
 		<!-- These dependencies are provided, because they should not be packaged 
 			into the JAR file. -->

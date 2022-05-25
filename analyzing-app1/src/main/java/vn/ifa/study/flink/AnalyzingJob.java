@@ -26,6 +26,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import com.amazonaws.services.kinesisanalytics.flink.connectors.producer.FlinkKinesisFirehoseProducer;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.java.utils.ParameterTool;
@@ -54,6 +55,7 @@ import org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer;
  * main(String[] args)) method, change the respective entry in the POM.xml file
  * (simply search for 'mainClass').
  */
+@Slf4j
 public class AnalyzingJob {
 
     private static final String PROP_BOOTSTRAP_SERVERS = "bootstrap-servers";
@@ -100,21 +102,18 @@ public class AnalyzingJob {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
         final String sink = outputProperties.getProperty("sink");
-        if ("FIREHOSE".equalsIgnoreCase(sink)){
+
+
+            log.info("Sink type: {}",sink);
             final String streamDeliveryName = firehoseProperties.getProperty("streamDeliveryName");
+            log.info("Delivery stream: {}",streamDeliveryName);
             FlinkKinesisFirehoseProducer<String> firehoseProducer =
                     new FlinkKinesisFirehoseProducer<>(streamDeliveryName, deser, firehoseProperties);
             env.fromSource(source, WatermarkStrategy.noWatermarks(), "KafkaSource")
                     .addSink(firehoseProducer);
-        }else {
-            final FlinkKafkaProducer<String> kafkaProducer =
-                    new FlinkKafkaProducer<String>(producerProperties.getProperty(PROP_TOPIC)
-                    , deser,producerProperties);
-            env.fromSource(source, WatermarkStrategy.noWatermarks(), "KafkaSource")
-                    .addSink(kafkaProducer);
-        }
 
-        env.execute("Demo Processor");
+
+        env.execute("Uppercase Processor");
     }
 
     private static void processArgs(String[] args, Properties props, String prefix) {
