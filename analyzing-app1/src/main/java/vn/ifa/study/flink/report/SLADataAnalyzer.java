@@ -13,15 +13,18 @@
 package vn.ifa.study.flink.report;
 
 import java.io.IOException;
-import java.util.Properties;
 
-import org.apache.flink.api.connector.source.Source;
+import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.jayway.jsonpath.DocumentContext;
+import com.jayway.jsonpath.JsonPath;
 
 import vn.sps.AbstractDataAnalyzer;
-import vn.sps.factory.SourceFactory;
 
 public class SLADataAnalyzer extends AbstractDataAnalyzer<JsonNode> {
 
@@ -30,10 +33,24 @@ public class SLADataAnalyzer extends AbstractDataAnalyzer<JsonNode> {
     }
 
     @Override
-    protected void analyze(DataStream<JsonNode> dataStream) {
-        dataStream.map(json -> json);
+    protected DataStream<JsonNode> analyze(DataStream<JsonNode> dataStream) {
+        final ObjectMapper mapper = new ObjectMapper();
         
-        Properties userInfoProperties = this.getConfiguration("userInfo");
-        Source source = SourceFactory.createS3Source(userInfoProperties);
+        return dataStream.map(transformJsonNode(mapper));
+    }
+
+    private MapFunction<JsonNode, JsonNode> transformJsonNode(final ObjectMapper mapper) {
+        return json -> {
+            
+            final ObjectNode mappedJson = mapper.createObjectNode();
+
+            DocumentContext jsonContext = JsonPath.parse(json.toString());
+            
+            mappedJson.put("traceId", jsonContext.<String>read("$.traceId"));
+            mappedJson.put("eventId", jsonContext.<String>read("$.eventId"));
+            
+            
+            return (JsonNode) mappedJson;
+        };
     }
 }

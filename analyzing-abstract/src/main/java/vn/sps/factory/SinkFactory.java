@@ -22,8 +22,6 @@ import org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer;
 import com.amazonaws.services.kinesisanalytics.flink.connectors.producer.FlinkKinesisFirehoseProducer;
 import com.amazonaws.services.kinesisanalytics.flink.connectors.serialization.JsonSerializationSchema;
 
-import vn.sps.utils.SinkType;
-
 public final class SinkFactory {
 
     private SinkFactory() {
@@ -41,13 +39,12 @@ public final class SinkFactory {
             InvocationTargetException, NoSuchMethodException, SecurityException {
 
         final String topic = sinkProperties.getProperty("topic");
-        final String serializationValueSchema = sinkProperties.getProperty("value.serializer");
+        final String serializationValueSchema = (String) sinkProperties.remove("value.serializer");
 
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         Class<?> loadedMyClass = classLoader.loadClass(serializationValueSchema);
         SerializationSchema serializationSchema = (SerializationSchema) loadedMyClass.getConstructor().newInstance();
-
+        
         return new FlinkKafkaProducer<>(topic, serializationSchema, sinkProperties);
     }
-    
 }

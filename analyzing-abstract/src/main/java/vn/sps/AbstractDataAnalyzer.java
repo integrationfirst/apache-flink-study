@@ -97,8 +97,8 @@ public abstract class AbstractDataAnalyzer<IN> implements DataAnalyzer {
 
         final DataStream<IN> stream = env.fromSource(source, WatermarkStrategy.noWatermarks(), sourceName);
 
-        analyze(stream);
-        stream.addSink(sink);
+        final DataStream<IN> dataStream = analyze(stream);
+        dataStream.addSink(sink);
 
         env.execute();
     }
@@ -116,5 +116,5 @@ public abstract class AbstractDataAnalyzer<IN> implements DataAnalyzer {
         }
     }
 
-    protected abstract void analyze(DataStream<IN> dataStream);
+    protected abstract DataStream<IN> analyze(DataStream<IN> dataStream);
 }
