@@ -86,7 +86,7 @@ public abstract class AbstractDataAnalyzer<IN> implements DataAnalyzer {
 
         final String sourceName = this.configurations.get(SOURCE_GROUP).getProperty(SOURCE_NAME);
         
-        final String sinkType = this.configurations.get(SINK_GROUP).getProperty("type");
+        final String sinkType = this.configurations.get(SINK_GROUP).getProperty("type").toUpperCase();
         
         final Source source = SourceFactory.createKafkaSource(this.configurations.get(SOURCE_GROUP));
         final SinkFunction sink = SinkFactory.createSink(SinkType.valueOf(sinkType),

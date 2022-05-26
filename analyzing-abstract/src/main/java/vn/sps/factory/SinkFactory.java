@@ -63,5 +63,4 @@ public final class SinkFactory {
         return new FlinkKafkaProducer<>(topic, serializationSchema, sinkProperties);
     }
     
-    
 }
