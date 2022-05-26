@@ -18,7 +18,9 @@
 
 package vn.ifa.study.flink;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.BiConsumer;
@@ -26,8 +28,17 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import com.amazonaws.services.kinesisanalytics.flink.connectors.producer.FlinkKinesisFirehoseProducer;
+import com.amazonaws.services.kinesisanalytics.flink.connectors.serialization.KinesisFirehoseSerializationSchema;
+import com.amazonaws.services.kinesisanalytics.model.CSVMappingParameters;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.jayway.jsonpath.DocumentContext;
+import com.jayway.jsonpath.JsonPath;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
+import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.connector.kafka.source.KafkaSource;
@@ -73,7 +84,7 @@ public class AnalyzingJob {
     public static final String BOOTSTRAP_SERVERS = "bootstrap.servers";
     private static final String OUTPUT_PROPERTIES = "outputProperties";
     private static final String FIREHOSE_PROPERTIES = "firehoseProperties";
-
+    private static final ObjectMapper objectMapper = new ObjectMapper();
     public static void main(String[] args) throws Exception {
 
         final Map<String, Properties> applicationProperties = KinesisAnalyticsRuntime.getApplicationProperties();
@@ -91,12 +102,10 @@ public class AnalyzingJob {
         processArgs(args, consumerProperties,CONSUMER_PROPERTIES);
         processArgs(args,producerProperties,PRODUCER_PROPERTIES);
 
-        final SimpleStringSchema deser = new SimpleStringSchema();
-
-        final KafkaSource<String> source = KafkaSource.<String> builder().setProperties(consumerProperties)
+        final KafkaSource<JsonNode> source = KafkaSource.<JsonNode> builder().setProperties(consumerProperties)
                 .setTopics(consumerProperties.getProperty(PROP_TOPIC))
-                .setStartingOffsets(OffsetsInitializer.earliest())
-                .setDeserializer(KafkaRecordDeserializationSchema.valueOnly(deser))
+                .setStartingOffsets(OffsetsInitializer.committedOffsets())
+                .setDeserializer(KafkaRecordDeserializationSchema.valueOnly(JsonDeserializer.class))
                 .build();
 
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -104,14 +113,17 @@ public class AnalyzingJob {
         final String sink = outputProperties.getProperty("sink");
 
 
-            log.info("Sink type: {}",sink);
-            final String streamDeliveryName = firehoseProperties.getProperty("streamDeliveryName");
-            log.info("Delivery stream: {}",streamDeliveryName);
-            FlinkKinesisFirehoseProducer<String> firehoseProducer =
-                    new FlinkKinesisFirehoseProducer<>(streamDeliveryName, deser, firehoseProperties);
-            env.fromSource(source, WatermarkStrategy.noWatermarks(), "KafkaSource")
-                    .addSink(firehoseProducer);
+        log.info("Sink type: {}",sink);
+        final String streamDeliveryName = firehoseProperties.getProperty("streamDeliveryName");
+        log.info("Delivery stream: {}",streamDeliveryName);
 
+        FlinkKinesisFirehoseProducer<String> firehoseProducer =
+                new FlinkKinesisFirehoseProducer<>(streamDeliveryName, new SimpleStringSchema(), firehoseProperties);
+
+        env.fromSource(source, WatermarkStrategy.noWatermarks(), "KafkaSource")
+                .map(mapToProcessEvent)
+                .map(mapJsonToCSV)
+                .addSink(firehoseProducer);
 
         env.execute("Uppercase Processor");
     }
@@ -140,33 +152,31 @@ public class AnalyzingJob {
 
 
 
-//    private static MapFunction<JsonNode, JsonNode> transfromMessage(final ObjectMapper mapper) {
-//        return json -> {
-//
-//            final ObjectNode mappedJson = mapper.createObjectNode();
-//
-//            DocumentContext jsonContext = JsonPath.parse(json.toString());
-//
-//            mappedJson.set("fileUrls", mapper.createArrayNode());
-//            mappedJson.put("traceId", jsonContext.<String>read("$.traceId"));
-//            mappedJson.put("eventId", jsonContext.<String>read("$.eventId"));
-//
-//            List<Object> documentsAsJson = JsonPath.parse(json.toString()).read("$.documents");
-//
-//            for (Object documentAsJson : documentsAsJson) {
-//
-//                final JsonNode arrayNode = mappedJson.get("fileUrls");
-//
-//                List<Object> filesAsJson = JsonPath.parse(documentAsJson).read("$.files");
-//
-//                for (Object fileAsJson : filesAsJson) {
-//
-//                    final String fileUrl = JsonPath.parse(fileAsJson).read("$.fileUrl");
-//
-//                    ((ArrayNode) arrayNode).add(fileUrl);
-//                }
-//            }
-//            return (JsonNode) mappedJson;
-//        };
-//    }
+    private static MapFunction<JsonNode, JsonNode> mapToProcessEvent = (json)-> {
+
+            final ObjectNode mappedJson = mapper.createObjectNode();
+
+            DocumentContext jsonContext = JsonPath.parse(json.toString());
+
+            mappedJson.put("traceId", jsonContext.<String>read("$.traceId"));
+            mappedJson.put("eventId", jsonContext.<String>read("$.eventId"));
+            mappedJson.put("status", jsonContext.<String>read("$.managementData.status"));
+            mappedJson.put("eventTime", jsonContext.<String>read("$.managementData.stepsMetadata[0].startTime"));
+
+            return (JsonNode) mappedJson;
+
+    };
+
+    private static MapFunction<JsonNode,String> mapJsonToCSV = (e)->{
+        ObjectNode oe = e.isObject()? (ObjectNode) e :null;
+        if (oe==null){
+            return "INVALID MSG";
+        }
+        String traceId = oe.findValue("traceId").textValue();
+        String eventId = oe.findValue("eventId").textValue();
+        String status = oe.findValue("status").textValue();
+        String eventTime = oe.findValue("eventTime").textValue();
+
+        return String.join(";",traceId,eventId,status,eventTime)+"\\r\\n";
+    };
 }
