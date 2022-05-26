@@ -23,8 +23,6 @@ import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.amazonaws.services.kinesisanalytics.runtime.KinesisAnalyticsRuntime;
 
@@ -33,8 +31,6 @@ import vn.sps.factory.SourceFactory;
 
 public abstract class AbstractDataAnalyzer<IN> implements DataAnalyzer {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDataAnalyzer.class);
-    
     private static final String SOURCE_GROUP = "source";
 
     private static final String SOURCE_NAME = "name";
@@ -87,7 +83,7 @@ public abstract class AbstractDataAnalyzer<IN> implements DataAnalyzer {
     @Override
     public void analyze() throws Exception {
 
-        final String sourceName = (String) readAndWarningMandatoryProperty(this.configurations.get(SOURCE_GROUP), SOURCE_NAME, 1);
+        final String sourceName = this.configurations.get(SOURCE_GROUP).getProperty(SOURCE_NAME);
         final Source source = SourceFactory.createKafkaSource(this.configurations.get(SOURCE_GROUP));
         final SinkFunction sink = SinkFactory.createFirehoseSink(this.configurations.get(SINK_GROUP));
 
@@ -99,16 +95,6 @@ public abstract class AbstractDataAnalyzer<IN> implements DataAnalyzer {
         stream.addSink(sink);
 
         env.execute();
-    }
-
-    private Object readAndWarningMandatoryProperty(Properties properties, String key, Object defaultValue) {
-
-        // WARN: Reimplement this function
-
-        if (!properties.contains(key)) {
-            LOGGER.warn("Cannot find mandatory configuration property [{}]. Use the default value {}", key, defaultValue);
-        }
-        return properties.getOrDefault(key,defaultValue);
     }
 
     protected abstract void analyze(DataStream<IN> dataStream);

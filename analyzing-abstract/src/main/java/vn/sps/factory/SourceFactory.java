@@ -34,7 +34,6 @@ public final class SourceFactory {
 
         final String topic = properties.getProperty("topic");
 
-        // Default serializer?
         final String deserializationValue = properties.getProperty("value.deserializer");
 
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
