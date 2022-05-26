@@ -22,9 +22,24 @@ import org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer;
 import com.amazonaws.services.kinesisanalytics.flink.connectors.producer.FlinkKinesisFirehoseProducer;
 import com.amazonaws.services.kinesisanalytics.flink.connectors.serialization.JsonSerializationSchema;
 
+import vn.sps.utils.SinkType;
+
 public final class SinkFactory {
 
     private SinkFactory() {
+    }
+    
+    public static <T> SinkFunction<T> createSink(SinkType sinkType, Properties sinkProperties)
+            throws ClassNotFoundException, InstantiationException, IllegalAccessException,
+            InvocationTargetException, NoSuchMethodException {
+        switch (sinkType) {
+            case KAFKA:
+                return createKafkaSink(sinkProperties);
+            case FIREHOSE:
+                return createFirehoseSink(sinkProperties);
+            default:
+                throw new IllegalArgumentException(String.format("Unsupport the sink type [%s]", sinkType.toString()));
+        }
     }
     
     public static <T> SinkFunction<T> createFirehoseSink(Properties sinkProperties) {
@@ -47,4 +62,6 @@ public final class SinkFactory {
 
         return new FlinkKafkaProducer<>(topic, serializationSchema, sinkProperties);
     }
+    
+    
 }

@@ -28,6 +28,7 @@ import com.amazonaws.services.kinesisanalytics.runtime.KinesisAnalyticsRuntime;
 
 import vn.sps.factory.SinkFactory;
 import vn.sps.factory.SourceFactory;
+import vn.sps.utils.SinkType;
 
 public abstract class AbstractDataAnalyzer<IN> implements DataAnalyzer {
 
@@ -84,8 +85,12 @@ public abstract class AbstractDataAnalyzer<IN> implements DataAnalyzer {
     public void analyze() throws Exception {
 
         final String sourceName = this.configurations.get(SOURCE_GROUP).getProperty(SOURCE_NAME);
+        
+        final String sinkType = this.configurations.get(SINK_GROUP).getProperty("type");
+        
         final Source source = SourceFactory.createKafkaSource(this.configurations.get(SOURCE_GROUP));
-        final SinkFunction sink = SinkFactory.createFirehoseSink(this.configurations.get(SINK_GROUP));
+        final SinkFunction sink = SinkFactory.createSink(SinkType.valueOf(sinkType),
+            this.configurations.get(SINK_GROUP));
 
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
