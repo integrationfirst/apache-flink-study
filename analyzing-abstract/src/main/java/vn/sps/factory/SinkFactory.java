@@ -29,19 +29,6 @@ public final class SinkFactory {
     private SinkFactory() {
     }
     
-    public static <T> SinkFunction<T> createSink(SinkType sinkType, Properties sinkProperties)
-            throws ClassNotFoundException, InstantiationException, IllegalAccessException,
-            InvocationTargetException, NoSuchMethodException {
-        switch (sinkType) {
-            case KAFKA:
-                return createKafkaSink(sinkProperties);
-            case FIREHOSE:
-                return createFirehoseSink(sinkProperties);
-            default:
-                throw new IllegalArgumentException(String.format("Unsupport the sink type [%s]", sinkType.toString()));
-        }
-    }
-    
     public static <T> SinkFunction<T> createFirehoseSink(Properties sinkProperties) {
 
         final String deliveryStream = sinkProperties.getProperty("deliveryStream");

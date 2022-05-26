@@ -13,12 +13,15 @@
 package vn.ifa.study.flink.report;
 
 import java.io.IOException;
+import java.util.Properties;
 
+import org.apache.flink.api.connector.source.Source;
 import org.apache.flink.streaming.api.datastream.DataStream;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
 import vn.sps.AbstractDataAnalyzer;
+import vn.sps.factory.SourceFactory;
 
 public class SLADataAnalyzer extends AbstractDataAnalyzer<JsonNode> {
 
@@ -29,5 +32,8 @@ public class SLADataAnalyzer extends AbstractDataAnalyzer<JsonNode> {
     @Override
     protected void analyze(DataStream<JsonNode> dataStream) {
         dataStream.map(json -> json);
+        
+        Properties userInfoProperties = this.getConfiguration("userInfo");
+        Source source = SourceFactory.createS3Source(userInfoProperties);
     }
 }

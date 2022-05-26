@@ -13,6 +13,7 @@
 package vn.sps;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -100,6 +101,19 @@ public abstract class AbstractDataAnalyzer<IN> implements DataAnalyzer {
         stream.addSink(sink);
 
         env.execute();
+    }
+    
+    public static <T> SinkFunction<T> createSink(SinkType sinkType, Properties sinkProperties)
+            throws ClassNotFoundException, InstantiationException, IllegalAccessException,
+            InvocationTargetException, NoSuchMethodException {
+        switch (sinkType) {
+            case KAFKA:
+                return SinkFactory.createKafkaSink(sinkProperties);
+            case FIREHOSE:
+                return SinkFactory.createFirehoseSink(sinkProperties);
+            default:
+                throw new IllegalArgumentException(String.format("Unsupport the sink type [%s]", sinkType.toString()));
+        }
     }
 
     protected abstract void analyze(DataStream<IN> dataStream);
