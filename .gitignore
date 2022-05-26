@@ -1,5 +1,6 @@
-**/target/
 **/.settings/
-**/bin/
-.classpath
-.project
+**/.classpath
+**/.project
+**/target/
+**/analyzing-abstract/bin/
+**/analyzing-app1/.idea/
