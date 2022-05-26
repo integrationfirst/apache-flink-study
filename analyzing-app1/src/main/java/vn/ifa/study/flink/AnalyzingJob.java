@@ -49,6 +49,7 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import com.amazonaws.services.kinesisanalytics.runtime.KinesisAnalyticsRuntime;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer;
+import org.apache.kafka.common.errors.SerializationException;
 
 /**
  * Skeleton for a Flink DataStream Job.
@@ -117,12 +118,23 @@ public class AnalyzingJob {
         final String streamDeliveryName = firehoseProperties.getProperty("streamDeliveryName");
         log.info("Delivery stream: {}",streamDeliveryName);
 
-        FlinkKinesisFirehoseProducer<String> firehoseProducer =
-                new FlinkKinesisFirehoseProducer<>(streamDeliveryName, new SimpleStringSchema(), firehoseProperties);
+        FlinkKinesisFirehoseProducer<JsonNode> firehoseProducer =
+                new FlinkKinesisFirehoseProducer<>(streamDeliveryName, new KinesisFirehoseSerializationSchema<JsonNode>() {
+                    @Override
+                    public ByteBuffer serialize(JsonNode jsonNode) {
+                        byte[] bytes = new byte[0];
+                        try {
+                            bytes = objectMapper.writeValueAsBytes(jsonNode);
+                        } catch (Exception e) {
+                            throw new SerializationException("Error serializing JSON message", e);
+                        }
+                        return ByteBuffer.wrap(bytes);
+                    }
+                }, firehoseProperties);
 
         env.fromSource(source, WatermarkStrategy.noWatermarks(), "KafkaSource")
                 .map(mapToProcessEvent)
-                .map(mapJsonToCSV)
+//                .map(mapJsonToCSV)
                 .addSink(firehoseProducer);
 
         env.execute("Uppercase Processor");
