@@ -1,16 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <parent>
-    <artifactId>analyzing-parent</artifactId>
-    <groupId>vn.sps</groupId>
-    <version>0.0.0.2</version>
-    <relativePath>../pom.xml/pom.xml</relativePath>
-  </parent>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>vn.ifa.study.flink</groupId>
-  <artifactId>report-sla-analytics-application</artifactId>
-  <name>report-sla-analytics-application</name>
-  <version>0.0.1</version>
+  <groupId>vn.sps</groupId>
+  <artifactId>analyzing-abstract</artifactId>
+  <name>Abstract Flink Job</name>
+  <version>0.0.0.1</version>
   <build>
     <pluginManagement>
       <plugins>
@@ -75,7 +69,7 @@
             <configuration>
               <artifactSet>
                 <excludes>
-                  <exclude>org.apache.flink:flink-shaded-force-shading</exclude>
+                  <exclude>org.apache.flink:force-shading</exclude>
                   <exclude>com.google.code.findbugs:jsr305</exclude>
                   <exclude>org.slf4j:*</exclude>
                   <exclude>org.apache.logging.log4j:*</exclude>
@@ -92,9 +86,8 @@
                 </filter>
               </filters>
               <transformers>
-                <transformer />
                 <transformer>
-                  <mainClass>vn.ifa.study.flink.ReportSLAAnalyticsApplication</mainClass>
+                  <mainClass>vn.sps.StreamingJob</mainClass>
                 </transformer>
               </transformers>
             </configuration>
@@ -184,20 +177,18 @@
       <version>1.7.25</version>
       <scope>provided</scope>
     </dependency>
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <version>1.2.3</version>
-      <scope>provided</scope>
-    </dependency>
   </dependencies>
+  <dependencyManagement />
   <properties>
-    <target.java.version>1.8</target.java.version>
     <scala.binary.version>2.12</scala.binary.version>
-    <log4j.version>2.17.1</log4j.version>
-    <flink.version>1.13.2</flink.version>
+    <maven.compiler.target>${target.java.version}</maven.compiler.target>
+    <kda.version>2.0.0</kda.version>
     <maven.compiler.source>${target.java.version}</maven.compiler.source>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.target>${target.java.version}</maven.compiler.target>
+    <log4j.version>2.12.1</log4j.version>
+    <jackson.version>2.13.3</jackson.version>
+    <target.java.version>1.8</target.java.version>
+    <flink.version>1.13.2</flink.version>
+    <kda.runtime.version>1.2.0</kda.runtime.version>
   </properties>
 </project>

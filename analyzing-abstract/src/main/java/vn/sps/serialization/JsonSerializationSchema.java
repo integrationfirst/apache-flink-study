@@ -1,7 +1,7 @@
 /*
- * Class: JsonDeserializer
+ * Class: JsonSerializationSchema
  *
- * Created on May 12, 2022
+ * Created on May 26, 2022
  *
  * (c) Copyright Swiss Post Solutions Ltd, unpublished work
  * All use, disclosure, and/or reproduction of this material is prohibited
@@ -10,53 +10,53 @@
  * Swiss Post Solution.
  * Floor 4-5-8, ICT Tower, Quang Trung Software City
  */
-package vn.ifa.study.flink;
+package vn.sps.serialization;
 
 import java.util.Collections;
 import java.util.Set;
 
+import org.apache.flink.api.common.serialization.SerializationSchema;
 import org.apache.kafka.common.errors.SerializationException;
-import org.apache.kafka.common.serialization.Deserializer;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 
-public class JsonDeserializer implements Deserializer<JsonNode> {
+public class JsonSerializationSchema implements SerializationSchema<JsonNode> {
+
+    private static final long serialVersionUID = 3736768577785354164L;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * Default constructor needed by Kafka
      */
-    public JsonDeserializer() {
+    public JsonSerializationSchema() {
         this(Collections.emptySet(), JsonNodeFactory.withExactBigDecimals(true));
     }
 
     /**
-     * A constructor that additionally specifies some {@link DeserializationFeature}
-     * for the deserializer
+     * A constructor that additionally specifies some {@link SerializationFeature}
+     * for the serializer
      *
-     * @param deserializationFeatures the specified deserialization features
+     * @param serializationFeatures the specified serialization features
      * @param jsonNodeFactory the json node factory to use.
      */
-    JsonDeserializer(final Set<DeserializationFeature> deserializationFeatures, final JsonNodeFactory jsonNodeFactory) {
-        deserializationFeatures.forEach(objectMapper::enable);
+    JsonSerializationSchema(final Set<SerializationFeature> serializationFeatures,
+            final JsonNodeFactory jsonNodeFactory) {
+        serializationFeatures.forEach(objectMapper::enable);
         objectMapper.setNodeFactory(jsonNodeFactory);
     }
 
     @Override
-    public JsonNode deserialize(String topic, byte[] bytes) {
-        if (bytes == null) {
+    public byte[] serialize(JsonNode data) {
+        if (data == null)
             return null;
-        }
-        JsonNode data;
         try {
-            data = objectMapper.readTree(bytes);
+            return objectMapper.writeValueAsBytes(data);
         } catch (Exception e) {
-            throw new SerializationException(e);
+            throw new SerializationException("Error serializing JSON message", e);
         }
-
-        return data;
     }
 }
