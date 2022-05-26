@@ -41,11 +41,11 @@ public abstract class AbstractDataAnalyzer<IN> implements DataAnalyzer {
 
     private static final String SINK_GROUP = "sink";
     
+    private Map<String, Properties> configurations = new HashMap<>();
+
     protected AbstractDataAnalyzer(String[] args) throws IOException {
         configure(args);
     }
-
-    private Map<String, Properties> configurations = new HashMap<>();
 
     private void configure(String[] args) throws IOException {
         loadKinesisProperties();
