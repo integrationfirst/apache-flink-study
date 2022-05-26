@@ -90,7 +90,7 @@ public abstract class AbstractDataAnalyzer<IN> implements DataAnalyzer {
         final String sinkType = this.configurations.get(SINK_GROUP).getProperty("type").toUpperCase();
         
         final Source source = SourceFactory.createKafkaSource(this.configurations.get(SOURCE_GROUP));
-        final SinkFunction sink = SinkFactory.createSink(SinkType.valueOf(sinkType),
+        final SinkFunction sink = createSink(SinkType.valueOf(sinkType),
             this.configurations.get(SINK_GROUP));
 
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
