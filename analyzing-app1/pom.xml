@@ -10,11 +10,11 @@
 		</parent>
 
 		<groupId>vn.ifa.study.flink</groupId>
-		<artifactId>analyzing-app1</artifactId>
+		<artifactId>report-sla-analytics-application</artifactId>
 		<version>0.0.1</version>
 		<packaging>jar</packaging>
 
-		<name>Flink Quickstart Job</name>
+		<name>report-sla-analytics-application</name>
 
 		<properties>
 				<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -31,11 +31,6 @@
 						<groupId>com.jayway.jsonpath</groupId>
 						<artifactId>json-path</artifactId>
 						<version>2.7.0</version>
-				</dependency>
-				<dependency>
-						<groupId>vn.sps</groupId>
-						<artifactId>analyzing-abstract</artifactId>
-						<version>0.0.0.1</version>
 				</dependency>
 		</dependencies>
 
@@ -94,7 +89,7 @@
 																		implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
 																<transformer
 																		implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-																		<mainClass>vn.ifa.study.flink.AnalyzingSLAJob</mainClass>
+																		<mainClass>vn.ifa.study.flink.ReportSLAAnalyticsApplication</mainClass>
 																</transformer>
 														</transformers>
 												</configuration>

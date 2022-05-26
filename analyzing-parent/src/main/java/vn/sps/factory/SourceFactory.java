@@ -12,14 +12,12 @@
  */
 package vn.sps.factory;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import org.apache.flink.connector.kafka.source.KafkaSource;
+import vn.sps.deserialization.JsonDeserializationSchema;
+
 import java.lang.reflect.InvocationTargetException;
 import java.util.Properties;
-
-import org.apache.flink.connector.kafka.source.KafkaSource;
-
-import com.fasterxml.jackson.databind.JsonNode;
-
-import vn.sps.deserialization.JsonDeserializationSchema;
 
 public final class SourceFactory {
     

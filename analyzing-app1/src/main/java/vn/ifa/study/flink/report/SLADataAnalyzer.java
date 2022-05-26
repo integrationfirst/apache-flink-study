@@ -18,16 +18,16 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import vn.sps.AbstractDataStream;
+import vn.sps.AbstractDataAnalyzer;
 
-public class ReportSLA extends AbstractDataStream<JsonNode>{
+public class SLADataAnalyzer extends AbstractDataAnalyzer<JsonNode> {
 
-    public ReportSLA(String[] args) throws IOException {
+    public SLADataAnalyzer(String[] args) throws IOException {
         super(args);
     }
 
     @Override
-    protected void execute(DataStream<JsonNode> dataStream) {
+    protected void analyze(DataStream<JsonNode> dataStream) {
         dataStream.map(json -> json);
     }
 }
