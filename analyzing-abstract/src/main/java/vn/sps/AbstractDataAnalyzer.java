@@ -103,7 +103,7 @@ public abstract class AbstractDataAnalyzer<IN> implements DataAnalyzer {
         env.execute();
     }
     
-    public static <T> SinkFunction<T> createSink(SinkType sinkType, Properties sinkProperties)
+    private <T> SinkFunction<T> createSink(SinkType sinkType, Properties sinkProperties)
             throws ClassNotFoundException, InstantiationException, IllegalAccessException,
             InvocationTargetException, NoSuchMethodException {
         switch (sinkType) {
