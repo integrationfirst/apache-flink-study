@@ -5,8 +5,8 @@
 
 		<groupId>vn.sps</groupId>
 		<artifactId>analyzing-parent</artifactId>
-		<version>0.0.0.1</version>
-		<packaging>jar</packaging>
+		<version>0.0.0.2</version>
+		<packaging>pom</packaging>
 
 		<name>analyzing-parent</name>
 
@@ -25,6 +25,13 @@
 
 		<dependencyManagement>
 				<dependencies>
+
+						<dependency>
+								<groupId>vn.sps</groupId>
+								<artifactId>analyzing-common</artifactId>
+								<version>0.0.0.2</version>
+						</dependency>
+
 				</dependencies>
 		</dependencyManagement>
 

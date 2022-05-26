@@ -12,7 +12,11 @@
  */
 package vn.sps;
 
-import com.amazonaws.services.kinesisanalytics.runtime.KinesisAnalyticsRuntime;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.connector.source.Source;
 import org.apache.flink.api.java.utils.ParameterTool;
@@ -21,14 +25,11 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.amazonaws.services.kinesisanalytics.runtime.KinesisAnalyticsRuntime;
+
 import vn.sps.factory.SinkFactory;
 import vn.sps.factory.SourceFactory;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
 
 public abstract class AbstractDataAnalyzer<IN> implements DataAnalyzer {
 
@@ -39,10 +40,6 @@ public abstract class AbstractDataAnalyzer<IN> implements DataAnalyzer {
     private static final String SOURCE_NAME = "name";
 
     private static final String SINK_GROUP = "sink";
-    
-    private Properties sourceProperties;
-    
-    private Properties sinkProperties;
     
     protected AbstractDataAnalyzer(String[] args) throws IOException {
         configure(args);
@@ -55,32 +52,27 @@ public abstract class AbstractDataAnalyzer<IN> implements DataAnalyzer {
         overwriteByArguments(args);
     }
 
-    private void overwriteByArguments(String[] args) throws IOException {
-        final ParameterTool parameters = ParameterTool.fromArgs(args);parameters.tom
-        final Properties localProperties = parameters.getProperties();
+    private void overwriteByArguments(String[] args) {
+        final ParameterTool parameters = ParameterTool.fromArgs(args);
+        final Map<String, String> localProperties = parameters.toMap();
 
-        final Map<String, Properties> kinesisProperties = KinesisAnalyticsRuntime.getApplicationProperties();
-
-        this.sourceProperties = kinesisProperties.get(SOURCE_GROUP);
-        this.sinkProperties = kinesisProperties.get(SINK_GROUP);
-
-        if (Objects.isNull(sourceProperties) || Objects.isNull(sinkProperties)) {
-
-            if(localProperties.isEmpty()) {
-                throw new IllegalArgumentException("The program argments can not empty");
+        localProperties.keySet().forEach(fullKey -> {
+            
+            final String group = fullKey.substring(0, fullKey.indexOf("."));
+            
+            final String key = fullKey.substring(fullKey.indexOf(".") + 1);
+            final Object value = localProperties.get(fullKey);
+            
+            if (this.configurations.containsKey(group)) {
+                
+                this.configurations.get(group).put(key, value);
+            } else {
+                final Properties properties = new Properties();
+                properties.put(key, value);
+                
+                configurations.put(group, properties);
             }
-            this.sourceProperties = new Properties();
-            this.sinkProperties = new Properties();
-            localProperties.keySet().forEach(element -> {
-
-                String fullKey = (String) element;
-                if (fullKey.length() > 1) {
-                    final String group = fullKey.substring(0, fullKey.indexOf("."));
-                    extractKeys(localProperties, fullKey, group, SOURCE_GROUP);
-                    extractKeys(localProperties, fullKey, group, SINK_GROUP);
-                }
-            });
-        }
+        });
     }
 
     private void loadKinesisProperties() throws IOException {
@@ -91,12 +83,13 @@ public abstract class AbstractDataAnalyzer<IN> implements DataAnalyzer {
         return configurations.get(group);
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void analyze() throws Exception {
 
-        final String sourceName = (String) readAndWarningMandatoryProperty(sourceProperties, SOURCE_NAME, 1);
-        final Source source = SourceFactory.createKafkaSource(sourceProperties);
-        final SinkFunction sink = SinkFactory.createFirehoseSink(sinkProperties);
+        final String sourceName = (String) readAndWarningMandatoryProperty(this.configurations.get(SOURCE_GROUP), SOURCE_NAME, 1);
+        final Source source = SourceFactory.createKafkaSource(this.configurations.get(SOURCE_GROUP));
+        final SinkFunction sink = SinkFactory.createFirehoseSink(this.configurations.get(SINK_GROUP));
 
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
@@ -116,14 +109,6 @@ public abstract class AbstractDataAnalyzer<IN> implements DataAnalyzer {
             LOGGER.warn("Cannot find mandatory configuration property [{}]. Use the default value {}", key, defaultValue);
         }
         return properties.getOrDefault(key,defaultValue);
-    }
-    
-    private void extractKeys(final Properties localProperties, String fullKey, final String group, final String defaultGroupName) {
-        if (group.equals(defaultGroupName)) {
-            String key = fullKey.substring(fullKey.indexOf(".") + 1);
-            Object value = localProperties.get(fullKey);
-            this.sourceProperties.put(key, value);
-        }
     }
 
     protected abstract void analyze(DataStream<IN> dataStream);

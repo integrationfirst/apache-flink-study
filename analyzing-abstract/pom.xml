@@ -6,12 +6,11 @@
 		<parent>
 				<groupId>vn.sps</groupId>
 				<artifactId>analyzing-parent</artifactId>
-				<version>0.0.0.1</version>
+				<version>0.0.0.2</version>
 				<relativePath />
 		</parent>
 		
-		<artifactId>analyzing-abstract</artifactId>
-		<version>0.0.0.1</version>
+		<artifactId>analyzing-common</artifactId>
 		<packaging>jar</packaging>
 
 		<name>Abstract Flink Job</name>

@@ -6,7 +6,7 @@
 		<parent>
 				<groupId>vn.sps</groupId>
 				<artifactId>analyzing-parent</artifactId>
-				<version>0.0.0.1</version>
+				<version>0.0.0.2</version>
 		</parent>
 
 		<groupId>vn.ifa.study.flink</groupId>
@@ -27,6 +27,10 @@
 		</properties>
 
 		<dependencies>
+				<dependency>
+						<groupId>vn.sps</groupId>
+						<artifactId>analyzing-common</artifactId>
+				</dependency>
 				<dependency>
 						<groupId>com.jayway.jsonpath</groupId>
 						<artifactId>json-path</artifactId>

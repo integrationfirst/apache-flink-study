@@ -3,13 +3,13 @@
   <parent>
     <artifactId>analyzing-parent</artifactId>
     <groupId>vn.sps</groupId>
-    <version>0.0.0.1</version>
+    <version>0.0.0.2</version>
     <relativePath>../pom.xml/pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>vn.ifa.study.flink</groupId>
-  <artifactId>analyzing-app1</artifactId>
-  <name>Flink Quickstart Job</name>
+  <artifactId>report-sla-analytics-application</artifactId>
+  <name>report-sla-analytics-application</name>
   <version>0.0.1</version>
   <build>
     <pluginManagement>
@@ -94,7 +94,7 @@
               <transformers>
                 <transformer />
                 <transformer>
-                  <mainClass>vn.ifa.study.flink.AnalyzingJob</mainClass>
+                  <mainClass>vn.ifa.study.flink.ReportSLAAnalyticsApplication</mainClass>
                 </transformer>
               </transformers>
             </configuration>
@@ -184,14 +184,20 @@
       <version>1.7.25</version>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>1.2.3</version>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
   <properties>
+    <target.java.version>1.8</target.java.version>
     <scala.binary.version>2.12</scala.binary.version>
-    <maven.compiler.target>${target.java.version}</maven.compiler.target>
+    <log4j.version>2.17.1</log4j.version>
+    <flink.version>1.13.2</flink.version>
     <maven.compiler.source>${target.java.version}</maven.compiler.source>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <log4j.version>2.17.1</log4j.version>
-    <target.java.version>1.8</target.java.version>
-    <flink.version>1.13.2</flink.version>
+    <maven.compiler.target>${target.java.version}</maven.compiler.target>
   </properties>
 </project>
