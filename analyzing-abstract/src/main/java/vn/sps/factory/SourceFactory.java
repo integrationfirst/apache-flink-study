@@ -20,8 +20,6 @@ import org.apache.flink.connector.kafka.source.KafkaSource;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import vn.sps.deserialization.JsonDeserializationSchema;
-
 public final class SourceFactory {
     
     private SourceFactory() {
@@ -38,7 +36,7 @@ public final class SourceFactory {
 
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         Class<?> loadedMyClass = classLoader.loadClass(deserializationValue);
-        DeserializationSchema deserializationSchema = (JsonDeserializationSchema) loadedMyClass.getConstructor().newInstance();
+        DeserializationSchema deserializationSchema = (DeserializationSchema) loadedMyClass.getConstructor().newInstance();
 
         return KafkaSource.<JsonNode> builder().setTopics(topic).setValueOnlyDeserializer(deserializationSchema).setProperties(properties).build();
     }

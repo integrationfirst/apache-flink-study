@@ -12,11 +12,15 @@
  */
 package vn.sps.factory;
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.Properties;
+
+import org.apache.flink.api.common.serialization.SerializationSchema;
+import org.apache.flink.streaming.api.functions.sink.SinkFunction;
+import org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer;
+
 import com.amazonaws.services.kinesisanalytics.flink.connectors.producer.FlinkKinesisFirehoseProducer;
 import com.amazonaws.services.kinesisanalytics.flink.connectors.serialization.JsonSerializationSchema;
-import org.apache.flink.streaming.api.functions.sink.SinkFunction;
-
-import java.util.Properties;
 
 public final class SinkFactory {
 
@@ -29,4 +33,18 @@ public final class SinkFactory {
         return new FlinkKinesisFirehoseProducer<>(deliveryStream, new JsonSerializationSchema<>(), sinkProperties);
     }
     
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public static <T> SinkFunction<T> createKafkaSink(Properties sinkProperties)
+            throws ClassNotFoundException, InstantiationException, IllegalAccessException, IllegalArgumentException,
+            InvocationTargetException, NoSuchMethodException, SecurityException {
+
+        final String topic = sinkProperties.getProperty("topic");
+        final String serializationValueSchema = sinkProperties.getProperty("value.serializer");
+
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        Class<?> loadedMyClass = classLoader.loadClass(serializationValueSchema);
+        SerializationSchema serializationSchema = (SerializationSchema) loadedMyClass.getConstructor().newInstance();
+
+        return new FlinkKafkaProducer<>(topic, serializationSchema, sinkProperties);
+    }
 }
