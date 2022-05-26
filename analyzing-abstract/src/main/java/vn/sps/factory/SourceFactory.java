@@ -12,21 +12,25 @@
  */
 package vn.sps.factory;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.flink.connector.kafka.source.KafkaSource;
-import vn.sps.deserialization.JsonDeserializationSchema;
-
 import java.lang.reflect.InvocationTargetException;
 import java.util.Properties;
+
+import org.apache.flink.api.common.serialization.DeserializationSchema;
+import org.apache.flink.connector.kafka.source.KafkaSource;
+
+import com.fasterxml.jackson.databind.JsonNode;
+
+import vn.sps.deserialization.JsonDeserializationSchema;
 
 public final class SourceFactory {
     
     private SourceFactory() {
     }
     
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static KafkaSource<JsonNode> createKafkaSource(Properties properties)
-            throws ClassNotFoundException, InstantiationException, IllegalAccessException, IllegalArgumentException,
-            InvocationTargetException, NoSuchMethodException, SecurityException {
+            throws ClassNotFoundException, InstantiationException, IllegalAccessException,
+            InvocationTargetException, NoSuchMethodException {
 
         final String topic = properties.getProperty("topic");
 
@@ -34,10 +38,8 @@ public final class SourceFactory {
         final String deserializationValue = properties.getProperty("value.deserializer");
 
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-
         Class<?> loadedMyClass = classLoader.loadClass(deserializationValue);
-
-        JsonDeserializationSchema deserializationSchema = (JsonDeserializationSchema) loadedMyClass.getConstructor().newInstance();
+        DeserializationSchema deserializationSchema = (JsonDeserializationSchema) loadedMyClass.getConstructor().newInstance();
 
         return KafkaSource.<JsonNode> builder().setTopics(topic).setValueOnlyDeserializer(deserializationSchema).setProperties(properties).build();
     }
