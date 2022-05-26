@@ -12,11 +12,7 @@
  */
 package vn.sps;
 
-import java.io.IOException;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
-
+import com.amazonaws.services.kinesisanalytics.runtime.KinesisAnalyticsRuntime;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
 import org.apache.flink.api.connector.source.Source;
 import org.apache.flink.api.java.utils.ParameterTool;
@@ -25,11 +21,14 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.amazonaws.services.kinesisanalytics.runtime.KinesisAnalyticsRuntime;
-
 import vn.sps.factory.SinkFactory;
 import vn.sps.factory.SourceFactory;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
 
 public abstract class AbstractDataAnalyzer<IN> implements DataAnalyzer {
 
@@ -37,7 +36,7 @@ public abstract class AbstractDataAnalyzer<IN> implements DataAnalyzer {
     
     private static final String SOURCE_GROUP = "source";
 
-    private static final String SOURCE_NAME = "sink";
+    private static final String SOURCE_NAME = "name";
 
     private static final String SINK_GROUP = "sink";
     
@@ -49,8 +48,15 @@ public abstract class AbstractDataAnalyzer<IN> implements DataAnalyzer {
         configure(args);
     }
 
+    private Map<String, Properties> configurations = new HashMap<>();
+
     private void configure(String[] args) throws IOException {
-        final ParameterTool parameters = ParameterTool.fromArgs(args);
+        loadKinesisProperties();
+        overwriteByArguments(args);
+    }
+
+    private void overwriteByArguments(String[] args) throws IOException {
+        final ParameterTool parameters = ParameterTool.fromArgs(args);parameters.tom
         final Properties localProperties = parameters.getProperties();
 
         final Map<String, Properties> kinesisProperties = KinesisAnalyticsRuntime.getApplicationProperties();
@@ -77,10 +83,18 @@ public abstract class AbstractDataAnalyzer<IN> implements DataAnalyzer {
         }
     }
 
+    private void loadKinesisProperties() throws IOException {
+        configurations.putAll(KinesisAnalyticsRuntime.getApplicationProperties());
+    }
+
+    protected Properties getConfiguration(String group){
+        return configurations.get(group);
+    }
+
     @Override
     public void analyze() throws Exception {
 
-        final String sourceName = (String) getProperty(this.sourceProperties, SOURCE_NAME, "Source");
+        final String sourceName = (String) readAndWarningMandatoryProperty(sourceProperties, SOURCE_NAME, 1);
         final Source source = SourceFactory.createKafkaSource(sourceProperties);
         final SinkFunction sink = SinkFactory.createFirehoseSink(sinkProperties);
 
@@ -93,13 +107,15 @@ public abstract class AbstractDataAnalyzer<IN> implements DataAnalyzer {
 
         env.execute();
     }
-    
-    Object getProperty(Properties properties, Object key, Object defaultValue) {
+
+    private Object readAndWarningMandatoryProperty(Properties properties, String key, Object defaultValue) {
+
+        // WARN: Reimplement this function
+
         if (!properties.contains(key)) {
-            LOGGER.warn("{}",
-                String.format("Don't find the %s configuration. Use the default value %s", key, defaultValue));
+            LOGGER.warn("Cannot find mandatory configuration property [{}]. Use the default value {}", key, defaultValue);
         }
-        return properties.getOrDefault(key, defaultValue);
+        return properties.getOrDefault(key,defaultValue);
     }
     
     private void extractKeys(final Properties localProperties, String fullKey, final String group, final String defaultGroupName) {

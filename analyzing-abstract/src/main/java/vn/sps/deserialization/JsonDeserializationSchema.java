@@ -12,13 +12,12 @@
  */
 package vn.sps.deserialization;
 
-import java.io.IOException;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.flink.api.common.serialization.AbstractDeserializationSchema;
 import org.apache.kafka.common.errors.SerializationException;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 
 public class JsonDeserializationSchema extends AbstractDeserializationSchema<JsonNode>{
 

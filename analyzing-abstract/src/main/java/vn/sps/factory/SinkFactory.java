@@ -12,12 +12,11 @@
  */
 package vn.sps.factory;
 
-import java.util.Properties;
-
-import org.apache.flink.streaming.api.functions.sink.SinkFunction;
-
 import com.amazonaws.services.kinesisanalytics.flink.connectors.producer.FlinkKinesisFirehoseProducer;
 import com.amazonaws.services.kinesisanalytics.flink.connectors.serialization.JsonSerializationSchema;
+import org.apache.flink.streaming.api.functions.sink.SinkFunction;
+
+import java.util.Properties;
 
 public final class SinkFactory {
 
