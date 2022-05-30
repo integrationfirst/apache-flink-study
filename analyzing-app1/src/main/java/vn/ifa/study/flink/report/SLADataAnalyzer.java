@@ -14,6 +14,7 @@ package vn.ifa.study.flink.report;
 
 import java.io.IOException;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
@@ -25,7 +26,7 @@ import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 
 import vn.sps.AbstractDataAnalyzer;
-
+@Slf4j
 public class SLADataAnalyzer extends AbstractDataAnalyzer<JsonNode> {
 
     public SLADataAnalyzer(String[] args) throws IOException {
@@ -41,16 +42,18 @@ public class SLADataAnalyzer extends AbstractDataAnalyzer<JsonNode> {
 
     private MapFunction<JsonNode, JsonNode> transformJsonNode(final ObjectMapper mapper) {
         return json -> {
-            
+
             final ObjectNode mappedJson = mapper.createObjectNode();
 
             DocumentContext jsonContext = JsonPath.parse(json.toString());
-            
-            mappedJson.put("traceId", jsonContext.<String>read("$.traceId"));
+
+            final String traceId = jsonContext.<String>read("$.traceId");
+            mappedJson.put("traceId", traceId);
             mappedJson.put("eventId", jsonContext.<String>read("$.eventId"));
-            mappedJson.put("status", "DONE");
-            mappedJson.put("eventTime", "2022-05-05T22:43:49.674-05:00");
-            
+            mappedJson.put("status", jsonContext.<String>read("$.managementData.status"));
+            mappedJson.put("eventTime", jsonContext.<String>read("$.managementData.stepsMetadata[0].startTime"));
+            log.info("Extract report record with traceId {}",traceId);
+
             return (JsonNode) mappedJson;
         };
     }
