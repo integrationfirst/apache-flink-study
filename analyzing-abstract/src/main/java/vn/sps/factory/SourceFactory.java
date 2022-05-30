@@ -18,6 +18,7 @@ import java.util.Properties;
 import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.api.connector.source.Source;
 import org.apache.flink.connector.kafka.source.KafkaSource;
+import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -39,7 +40,9 @@ public final class SourceFactory {
         Class<?> loadedMyClass = classLoader.loadClass(deserializationValue);
         DeserializationSchema deserializationSchema = (DeserializationSchema) loadedMyClass.getConstructor().newInstance();
         
-        return KafkaSource.<JsonNode> builder().setTopics(topic).setValueOnlyDeserializer(deserializationSchema).setProperties(properties).build();
+        return KafkaSource.<JsonNode> builder().setTopics(topic).setStartingOffsets(
+            OffsetsInitializer.committedOffsets()).setValueOnlyDeserializer(deserializationSchema).setProperties(
+                properties).build();
     }
 
     public static Source createS3Source(Properties userInfoProperties) {
