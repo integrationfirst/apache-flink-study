@@ -48,7 +48,8 @@ public class SLADataAnalyzer extends AbstractDataAnalyzer<JsonNode> {
             
             mappedJson.put("traceId", jsonContext.<String>read("$.traceId"));
             mappedJson.put("eventId", jsonContext.<String>read("$.eventId"));
-            
+            mappedJson.put("status", "DONE");
+            mappedJson.put("eventTime", "2022-05-05T22:43:49.674-05:00");
             
             return (JsonNode) mappedJson;
         };
