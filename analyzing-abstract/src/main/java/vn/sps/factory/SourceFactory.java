@@ -19,6 +19,7 @@ import org.apache.flink.api.common.serialization.DeserializationSchema;
 import org.apache.flink.api.connector.source.Source;
 import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
+import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -41,7 +42,7 @@ public final class SourceFactory {
         DeserializationSchema deserializationSchema = (DeserializationSchema) loadedMyClass.getConstructor().newInstance();
         
         return KafkaSource.<JsonNode> builder().setTopics(topic).setStartingOffsets(
-            OffsetsInitializer.committedOffsets()).setValueOnlyDeserializer(deserializationSchema).setProperties(
+            OffsetsInitializer.committedOffsets(OffsetResetStrategy.EARLIEST)).setValueOnlyDeserializer(deserializationSchema).setProperties(
                 properties).build();
     }
 
