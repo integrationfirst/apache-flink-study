@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
@@ -38,6 +39,8 @@ public abstract class AbstractDataAnalyzer<IN> implements DataAnalyzer {
     private static final String SOURCE_NAME = "name";
 
     private static final String SINK_GROUP = "sink";
+    
+    private static final String GENERAL_GROUP = "general";
     
     private Map<String, Properties> configurations = new HashMap<>();
 
@@ -84,7 +87,9 @@ public abstract class AbstractDataAnalyzer<IN> implements DataAnalyzer {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void analyze() throws Exception {
-
+        
+        final String jobName = this.configurations.get(GENERAL_GROUP).getProperty("jobName");
+        
         final String sourceName = this.configurations.get(SOURCE_GROUP).getProperty(SOURCE_NAME);
         
         final String sinkType = this.configurations.get(SINK_GROUP).getProperty("type").toUpperCase();
@@ -97,10 +102,13 @@ public abstract class AbstractDataAnalyzer<IN> implements DataAnalyzer {
 
         final DataStream<IN> stream = env.fromSource(source, WatermarkStrategy.noWatermarks(), sourceName);
 
-        final DataStream<IN> dataStream = analyze(stream);
+        // ignore deserialization errors
+        stream.filter(Objects::nonNull);
+        
+        final DataStream<IN> dataStream = this.analyze(stream);
         dataStream.addSink(sink);
 
-        env.execute();
+        env.execute(jobName);
     }
     
     private <T> SinkFunction<T> createSink(SinkType sinkType, Properties sinkProperties)

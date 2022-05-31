@@ -12,18 +12,22 @@
  */
 package vn.sps.serialization;
 
+import java.io.IOException;
+
+import org.apache.flink.api.common.serialization.AbstractDeserializationSchema;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.flink.api.common.serialization.AbstractDeserializationSchema;
-import org.apache.kafka.common.errors.SerializationException;
-
-import java.io.IOException;
 
 public class JsonDeserializationSchema extends AbstractDeserializationSchema<JsonNode>{
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     
     private static final long serialVersionUID = -549701789070382544L;
+    
+    private static final Logger LOGGER  = LoggerFactory.getLogger(JsonDeserializationSchema.class);
 
     @Override
     public JsonNode deserialize(byte[] message) throws IOException {
@@ -31,11 +35,12 @@ public class JsonDeserializationSchema extends AbstractDeserializationSchema<Jso
         if (message == null) {
             return null;
         }
-        JsonNode data;
+        JsonNode data = null;
         try {
             data = objectMapper.readTree(message);
         } catch (Exception e) {
-            throw new SerializationException(e);
+            LOGGER.error("Error while deserializing the message {}. So skip this message. Error detail: {}",
+                new String(message), e);
         }
         return data;
     }
