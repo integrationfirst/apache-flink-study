@@ -10,7 +10,7 @@
   <groupId>vn.ifa.study.flink</groupId>
   <artifactId>report-sla-analytics-application</artifactId>
   <name>report-sla-analytics-application</name>
-  <version>0.0.1</version>
+  <version>0.0.6</version>
   <build>
     <pluginManagement>
       <plugins>
@@ -192,12 +192,12 @@
     </dependency>
   </dependencies>
   <properties>
-    <target.java.version>1.8</target.java.version>
     <scala.binary.version>2.12</scala.binary.version>
-    <log4j.version>2.17.1</log4j.version>
-    <flink.version>1.13.2</flink.version>
+    <maven.compiler.target>${target.java.version}</maven.compiler.target>
     <maven.compiler.source>${target.java.version}</maven.compiler.source>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.target>${target.java.version}</maven.compiler.target>
+    <log4j.version>2.17.1</log4j.version>
+    <target.java.version>1.8</target.java.version>
+    <flink.version>1.13.2</flink.version>
   </properties>
 </project>
