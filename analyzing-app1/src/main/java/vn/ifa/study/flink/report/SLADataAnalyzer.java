@@ -146,7 +146,7 @@ public class SLADataAnalyzer extends AbstractDataAnalyzer<JsonNode> {
 			e.printStackTrace();
 		}
         
-        final StreamExecutionEnvironment env = this.env;
+        final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         
         dataStream.assignTimestampsAndWatermarks(new WatermarkStrategy<JsonNode>() {
 
