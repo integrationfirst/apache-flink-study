@@ -18,6 +18,20 @@
 
 package vn.ifa.study.flink;
 
+import java.util.Properties;
+
+import org.apache.flink.api.common.eventtime.AscendingTimestampsWatermarks;
+import org.apache.flink.api.common.eventtime.TimestampAssigner;
+import org.apache.flink.api.common.eventtime.TimestampAssignerSupplier;
+import org.apache.flink.api.common.eventtime.WatermarkGenerator;
+import org.apache.flink.api.common.eventtime.WatermarkStrategy;
+import org.apache.flink.api.common.functions.JoinFunction;
+import org.apache.flink.api.java.functions.KeySelector;
+import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
+import org.apache.flink.streaming.api.windowing.time.Time;
+
 import vn.ifa.study.flink.report.SLADataAnalyzer;
 
 /**
@@ -40,7 +54,45 @@ public class ReportSLAAnalyticsApplication {
 
     public static void main(String[] args) throws Exception {
         SLADataAnalyzer analyzer = new SLADataAnalyzer(args);
-        analyzer.analyze();
+        analyzer.test();
     }
+
+	/*
+	 * private void test() throws Exception { StreamExecutionEnvironment env =
+	 * StreamExecutionEnvironment.getExecutionEnvironment();
+	 * 
+	 * final DataStream<String> dataStream1 = env.fromElements("John", "Zbe",
+	 * "Zico");
+	 * 
+	 * final DataStream<String> dataStream2 = env.fromElements("John", "Zbe",
+	 * "Abe");
+	 * 
+	 * dataStream1 .join(dataStream2) .where(new KeySelector<String, String>() {
+	 * 
+	 * private static final long serialVersionUID = -8244502354779754470L;
+	 * 
+	 * @Override public String getKey(String value) throws Exception {
+	 * System.out.println("where:json " + value); return value; } }) .equalTo(new
+	 * KeySelector<String, String>() {
+	 * 
+	 * private static final long serialVersionUID = 6569463193999775400L;
+	 * 
+	 * @Override public String getKey(String value) throws Exception {
+	 * System.out.println("equal:json " + value); return value; } })
+	 * .window(TumblingEventTimeWindows.of(Time.seconds(5))) .apply(new
+	 * JoinFunction<String, String, String>() {
+	 * 
+	 * private static final long serialVersionUID = -7013974409091960477L;
+	 * 
+	 * @Override public String join(String first, String second) throws Exception {
+	 * 
+	 * System.out.println("########first: " + first);
+	 * System.out.println("###########second: " + second);
+	 * 
+	 * return first+" "+second; } }).print();
+	 * 
+	 * 
+	 * env.execute(); }
+	 */
 
 }
