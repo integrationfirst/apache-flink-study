@@ -18,20 +18,6 @@
 
 package vn.ifa.study.flink;
 
-import java.util.Properties;
-
-import org.apache.flink.api.common.eventtime.AscendingTimestampsWatermarks;
-import org.apache.flink.api.common.eventtime.TimestampAssigner;
-import org.apache.flink.api.common.eventtime.TimestampAssignerSupplier;
-import org.apache.flink.api.common.eventtime.WatermarkGenerator;
-import org.apache.flink.api.common.eventtime.WatermarkStrategy;
-import org.apache.flink.api.common.functions.JoinFunction;
-import org.apache.flink.api.java.functions.KeySelector;
-import org.apache.flink.streaming.api.datastream.DataStream;
-import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
-import org.apache.flink.streaming.api.windowing.time.Time;
-
 import vn.ifa.study.flink.report.SLADataAnalyzer;
 
 /**
@@ -52,10 +38,10 @@ import vn.ifa.study.flink.report.SLADataAnalyzer;
  */
 public class ReportSLAAnalyticsApplication {
 
-    public static void main(String[] args) throws Exception {
-        SLADataAnalyzer analyzer = new SLADataAnalyzer(args);
-        analyzer.test();
-    }
+	public static void main(final String[] args) throws Exception {
+		final SLADataAnalyzer analyzer = new SLADataAnalyzer(args);
+		analyzer.test();
+	}
 
 	/*
 	 * private void test() throws Exception { StreamExecutionEnvironment env =
