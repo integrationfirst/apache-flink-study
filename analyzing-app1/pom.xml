@@ -107,7 +107,7 @@
 									implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
 								<transformer
 									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>vn.ifa.study.flink.ReportSLAAnalyticsApplication</mainClass>
+									<mainClass>vn.ifa.study.flink.DemoAnalyticsApplication</mainClass>
 								</transformer>
 							</transformers>
 						</configuration>

@@ -18,7 +18,7 @@
 
 package vn.ifa.study.flink;
 
-import vn.ifa.study.flink.report.SLADataAnalyzer;
+import vn.ifa.study.flink.report.DemoDataAnalyzer;
 
 /**
  * Skeleton for a Flink DataStream Job.
@@ -36,10 +36,10 @@ import vn.ifa.study.flink.report.SLADataAnalyzer;
  * main(String[] args)) method, change the respective entry in the POM.xml file
  * (simply search for 'mainClass').
  */
-public class ReportSLAAnalyticsApplication {
+public class DemoAnalyticsApplication {
 
 	public static void main(final String[] args) throws Exception {
-		final SLADataAnalyzer analyzer = new SLADataAnalyzer(args);
+		final DemoDataAnalyzer analyzer = new DemoDataAnalyzer(args);
 		analyzer.test();
 	}
 

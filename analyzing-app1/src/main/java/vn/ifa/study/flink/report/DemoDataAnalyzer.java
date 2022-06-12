@@ -42,13 +42,13 @@ import vn.sps.cdipp.AbstractDataAnalyzer;
 import vn.sps.cdipp.factory.SourceFactory;
 import vn.sps.cdipp.serialization.JsonNodeSerializationSchema;
 
-public class SLADataAnalyzer extends AbstractDataAnalyzer<JsonNode> {
+public class DemoDataAnalyzer extends AbstractDataAnalyzer<JsonNode> {
 
-	private static final Logger log = LoggerFactory.getLogger(SLADataAnalyzer.class);
+	private static final Logger log = LoggerFactory.getLogger(DemoDataAnalyzer.class);
 
 	private static final long serialVersionUID = 4919141782930956120L;
 
-	public SLADataAnalyzer(final String[] args) throws IOException {
+	public DemoDataAnalyzer(final String[] args) throws IOException {
 		super(args);
 	}
 
