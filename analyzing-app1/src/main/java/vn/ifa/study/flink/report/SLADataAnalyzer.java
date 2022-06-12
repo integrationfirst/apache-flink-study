@@ -73,7 +73,7 @@ public class SLADataAnalyzer extends AbstractDataAnalyzer<JsonNode> {
 											.put("name", "Zico");
 
 		// final DataStream<JsonNode> dataStream1 = env.fromElements(jsonNodeJohn,
-		// jsonNodeZbe, jsonNodeZico)
+		// jsonNodeZbe, jsonNodeZico) df
 		// .assignTimestampsAndWatermarks(waterMark());
 		final DataStream<JsonNode> dataStream1 = env.fromSource(kafkaSource, this.waterMark(), "Kafka")
 													.rebalance()
