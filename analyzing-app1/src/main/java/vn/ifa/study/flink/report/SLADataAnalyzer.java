@@ -26,8 +26,8 @@ import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.windowing.assigners.SlidingEventTimeWindows;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
+import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,7 +94,7 @@ public class SLADataAnalyzer extends AbstractDataAnalyzer<JsonNode> {
 					return value;
 				}
 			})
-	        .window(SlidingEventTimeWindows.of(Time.minutes(50) /* size */, Time.minutes(10) /* slide */))
+	        .window(TumblingProcessingTimeWindows.of(Time.minutes(2)))
 	        .apply(new JoinFunction<JsonNode, String, String>() {
 	
 				private static final long serialVersionUID = -7013974409091960477L;
