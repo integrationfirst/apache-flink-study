@@ -24,9 +24,11 @@ public class Example_01_Print_Stream {
 
     public static void main(final String[] args) throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+
         env.fromElements(ExampleData.IMPORT_EVENTS)
            .print();
-        env.execute();
+        env.setParallelism(1)
+           .execute("Example1");
     }
 
 }
