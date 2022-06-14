@@ -4,6 +4,10 @@ import java.time.LocalDateTime;
 
 import org.joda.time.DateTime;
 
+import vn.ifa.study.flink.event.DocumentCompletionEvent;
+import vn.ifa.study.flink.event.DocumentImportEvent;
+import vn.ifa.study.flink.model.Document;
+
 public final class ExampleData {
 
     private ExampleData() {
@@ -38,4 +42,32 @@ public final class ExampleData {
                                .build()
 
     };
+
+    public static final DocumentCompletionEvent[] COMPLETION_EVENTS = {
+
+            DocumentCompletionEvent.builder()
+                                   .completionTime(LocalDateTime.now()
+                                                                .toString())
+                                   .document(Document.builder()
+                                                     .id("1")
+                                                     .name("DOC1")
+                                                     .build())
+                                   .build(),
+            DocumentCompletionEvent.builder()
+                                   .completionTime(LocalDateTime.now()
+                                                                .toString())
+                                   .document(Document.builder()
+                                                     .id("2")
+                                                     .name("DOC2")
+                                                     .build())
+                                   .build(),
+            DocumentCompletionEvent.builder()
+                                   .completionTime(LocalDateTime.now()
+                                                                .toString())
+                                   .document(Document.builder()
+                                                     .id("4")
+                                                     .name("DOC4")
+                                                     .build())
+                                   .build() };
+
 }

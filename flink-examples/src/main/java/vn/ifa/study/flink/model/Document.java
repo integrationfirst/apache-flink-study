@@ -1,4 +1,4 @@
-package vn.ifa.study.flink;
+package vn.ifa.study.flink.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,9 +11,7 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DocumentImportEvent {
-
-    private Document document;
-    private String importTime;
-
+public class Document {
+    private String id;
+    private String name;
 }

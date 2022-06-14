@@ -1,4 +1,4 @@
-package vn.ifa.study.flink;
+package vn.ifa.study.flink.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,10 +8,10 @@ import lombok.Setter;
 
 @Setter
 @Getter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Document {
-    private String id;
-    private String name;
+@Builder
+public class UserInfo {
+    private String username;
+    private String fullName;
 }
