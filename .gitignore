@@ -2,5 +2,5 @@
 **/.classpath
 **/.project
 **/target/
-**/analyzing-abstract/bin/
+**/analyzing-abstract/bin/*
 /analyzing-app1/.idea/
