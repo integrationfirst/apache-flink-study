@@ -19,16 +19,19 @@ import org.apache.flink.api.common.eventtime.AscendingTimestampsWatermarks;
 import org.apache.flink.api.common.eventtime.TimestampAssigner;
 import org.apache.flink.api.common.eventtime.TimestampAssignerSupplier;
 import org.apache.flink.api.common.eventtime.WatermarkGenerator;
+import org.apache.flink.api.common.eventtime.WatermarkGeneratorSupplier;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
-import org.apache.flink.api.common.functions.JoinFunction;
 import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.common.state.ValueState;
+import org.apache.flink.api.common.state.ValueStateDescriptor;
+import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.functions.KeySelector;
-import org.apache.flink.connector.kafka.source.KafkaSource;
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
-import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
-import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows;
-import org.apache.flink.streaming.api.windowing.time.Time;
+import org.apache.flink.streaming.api.datastream.DataStreamSource;
+import org.apache.flink.streaming.api.functions.co.CoProcessFunction;
+import org.apache.flink.types.Row;
+import org.apache.flink.util.Collector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +43,6 @@ import com.jayway.jsonpath.JsonPath;
 
 import vn.sps.cdipp.AbstractDataAnalyzer;
 import vn.sps.cdipp.factory.SourceFactory;
-import vn.sps.cdipp.serialization.JsonNodeSerializationSchema;
 
 public class SLADataAnalyzer extends AbstractDataAnalyzer<JsonNode> {
 
@@ -52,202 +54,83 @@ public class SLADataAnalyzer extends AbstractDataAnalyzer<JsonNode> {
 		super(args);
 	}
 
-	public void test() throws Exception {
-		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+	@Override
+	protected DataStream<JsonNode> analyze(final DataStream<JsonNode> dataStream) {
 
-		final Properties properties = this.getConfiguration("source");
-		properties.put("deserializer", JsonNodeSerializationSchema.class);
+		final Properties properties = this.getConfiguration("userInfo");
+		DataStreamSource<Row> dataStreamSource = SourceFactory.createS3Source(properties,
+				getStreamExecutionEnvironment());
 
-		final KafkaSource<JsonNode> kafkaSource = SourceFactory.createKafkaSource(properties);
+		dataStream.keyBy(getDataStream1Key()).connect(dataStreamSource.keyBy(getDataStream2Key()))
+				.process(lookupFullName()).print();
 
-		final ObjectMapper mapper = new ObjectMapper();
-		final JsonNode jsonNodeJohn = mapper.createObjectNode()
-											.put("name", "John");
-		final JsonNode jsonNodeZbe = mapper	.createObjectNode()
-											.put("name", "Zbe");
-		final JsonNode jsonNodeZico = mapper.createObjectNode()
-											.put("name", "Zico");
-
-//		final DataStream<JsonNode> dataStream1 = env.fromElements(jsonNodeJohn, jsonNodeZbe, jsonNodeZico)
-//				.assignTimestampsAndWatermarks(waterMark());
-		final DataStream<JsonNode> dataStream1 = env.fromSource(kafkaSource, waterMark(), "Kafka").rebalance()
-				.assignTimestampsAndWatermarks(waterMark());
-		
-        DataStream<String> dataStream2 = env.fromElements("John", "Zbe", "Abe")
-        		.assignTimestampsAndWatermarks(waterMark());
-        
-        dataStream1
-	        .join(dataStream2)
-	        .where(new KeySelector<JsonNode, String>() {
-	
-				private static final long serialVersionUID = -8244502354779754470L;
-	
-				@Override
-				public String getKey(JsonNode value) throws Exception {
-					System.out.println("where:value " + value);
-					return value.get("name").asText();
-				}
-			})
-	        .equalTo(new KeySelector<String, String>() {
-				
-				private static final long serialVersionUID = 6569463193999775400L;
-	
-				@Override
-				public String getKey(String value) throws Exception {
-					System.out.println("equal:value " + value);
-					return value;
-				}
-			})
-	        .window(TumblingProcessingTimeWindows.of(Time.minutes(2)))
-	        .apply(new JoinFunction<JsonNode, String, String>() {
-	
-				private static final long serialVersionUID = -7013974409091960477L;
-	
-				@Override
-				public String join(JsonNode first, String second) throws Exception {
-					
-					System.out.println("########first: " + first);
-					System.out.println("###########second: " + second);
-					
-					return first+" "+second;
-				}
-			}).print();
-	        
-	        
-	        env.execute();
+		return dataStream;
 	}
 
-	private <T> WatermarkStrategy<T> waterMark() {
-		return new WatermarkStrategy<T>() {
+	private CoProcessFunction<JsonNode, Row, String> lookupFullName() {
+		return new CoProcessFunction<JsonNode, Row, String>() {
 
-			private static final long serialVersionUID = 1L;
+			private ValueState<Row> referenceDataState = null;
+			
+			private static final long serialVersionUID = -6905557599249605381L;
 
 			@Override
-			public WatermarkGenerator<T> createWatermarkGenerator(
-					final org.apache.flink.api.common.eventtime.WatermarkGeneratorSupplier.Context context) {
-				return new AscendingTimestampsWatermarks<>();
+			public void open(Configuration config) {
+				
+				System.out.println("Open function is running...!");
+				
+				ValueStateDescriptor<Row> cDescriptor = new ValueStateDescriptor<>(
+						"referenceData",
+						TypeInformation.of(Row.class)
+				);
+				referenceDataState = getRuntimeContext().getState(cDescriptor);
+			}
+			
+
+			@Override
+			public void processElement1(JsonNode jsonKafka, CoProcessFunction<JsonNode, Row, String>.Context arg1,
+					Collector<String> output) throws Exception {
+				System.out.println("get name: " + referenceDataState.value());
+				output.collect(jsonKafka + " with " + referenceDataState.value());
 			}
 
 			@Override
-			public TimestampAssigner<T> createTimestampAssigner(final TimestampAssignerSupplier.Context context) {
-				return (event, timestamp) -> System.currentTimeMillis();
+			public void processElement2(Row row, CoProcessFunction<JsonNode, Row, String>.Context arg1,
+					Collector<String> arg2) throws Exception {
+				
+				System.out.println("update name: " + row);
+				referenceDataState.update(row);
 			}
 
 		};
 	}
 
-	@Override
-	protected DataStream<JsonNode> analyze(final DataStream<JsonNode> dataStream) {
-		final ObjectMapper mapper = new ObjectMapper();
+	private KeySelector<Row, String> getDataStream2Key() {
+		return new KeySelector<Row, String>() {
+					private static final long serialVersionUID = -8244502354779754470L;
 
-		final Properties properties = new Properties();
-		properties.putAll(this.getConfiguration("source"));
-		properties.setProperty("topics", "analyzing-app-2-input-channel");
-		KafkaSource<JsonNode> source = null;
-		try {
-			source = SourceFactory.createKafkaSource(properties);
-		} catch (final InstantiationException e) {
-			e.printStackTrace();
-		} catch (final IllegalAccessException e) {
-			e.printStackTrace();
-		}
+					@Override
+					public String getKey(Row value) throws Exception {
+						System.out.println("connect:value " + value.getField(1));
+						return (String) value.getField(1);
+					}
+				};
+	}
 
-		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-
-		dataStream.assignTimestampsAndWatermarks(new WatermarkStrategy<JsonNode>() {
-
-			private static final long serialVersionUID = 8162042624195674743L;
+	private KeySelector<JsonNode, String> getDataStream1Key() {
+		return new KeySelector<JsonNode, String>() {
+			private static final long serialVersionUID = -8244502354779754470L;
 
 			@Override
-			public WatermarkGenerator<JsonNode> createWatermarkGenerator(
-					final org.apache.flink.api.common.eventtime.WatermarkGeneratorSupplier.Context context) {
-				return new AscendingTimestampsWatermarks<>();
+			public String getKey(JsonNode value) throws Exception {
+				System.out.println("keyBy:value " + value.get("name").asText());
+				return value.get("name").asText();
 			}
-
-			@Override
-			public TimestampAssigner<JsonNode> createTimestampAssigner(
-					final TimestampAssignerSupplier.Context context) {
-				return (event, timestamp) -> System.currentTimeMillis();
-			}
-
-		});
-		final DataStream<JsonNode> dataStream2 = env.fromSource(source, new WatermarkStrategy<JsonNode>() {
-
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public WatermarkGenerator<JsonNode> createWatermarkGenerator(
-					final org.apache.flink.api.common.eventtime.WatermarkGeneratorSupplier.Context context) {
-				return new AscendingTimestampsWatermarks<>();
-			}
-
-			@Override
-			public TimestampAssigner<JsonNode> createTimestampAssigner(
-					final TimestampAssignerSupplier.Context context) {
-				return (event, timestamp) -> System.currentTimeMillis();
-			}
-
-		}, "kafka2");
-		dataStream2.assignTimestampsAndWatermarks(new WatermarkStrategy<JsonNode>() {
-
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public WatermarkGenerator<JsonNode> createWatermarkGenerator(
-					final org.apache.flink.api.common.eventtime.WatermarkGeneratorSupplier.Context context) {
-				return new AscendingTimestampsWatermarks<>();
-			}
-
-			@Override
-			public TimestampAssigner<JsonNode> createTimestampAssigner(
-					final TimestampAssignerSupplier.Context context) {
-				return (event, timestamp) -> System.currentTimeMillis();
-			}
-
-		});
-		return dataStream	.join(dataStream2)
-							.where(new KeySelector<JsonNode, String>() {
-
-								private static final long serialVersionUID = 1L;
-
-								@Override
-								public String getKey(final JsonNode value) throws Exception {
-									System.out.println("where:json " + value);
-									return value.get("traceId")
-												.asText();
-								}
-							})
-							.equalTo(new KeySelector<JsonNode, String>() {
-
-								private static final long serialVersionUID = 8170863507711599110L;
-
-								@Override
-								public String getKey(final JsonNode value) throws Exception {
-									System.out.println("equal:json " + value);
-									return value.get("traceId")
-												.asText();
-								}
-							})
-							.window(TumblingEventTimeWindows.of(Time.seconds(50)))
-							.apply(new JoinFunction<JsonNode, JsonNode, JsonNode>() {
-
-								private static final long serialVersionUID = 8164167858060757109L;
-
-								@Override
-								public JsonNode join(final JsonNode first, final JsonNode second) throws Exception {
-
-									System.out.println("########first: " + first);
-									System.out.println("###########second: " + second);
-
-									return first;
-								}
-							})
-							.map(this.transformJsonNode(mapper));
+		};
 	}
 
 	private MapFunction<JsonNode, JsonNode> transformJsonNode(final ObjectMapper mapper) {
 		return json -> {
-
 			final ObjectNode mappedJson = mapper.createObjectNode();
 
 			final DocumentContext jsonContext = JsonPath.parse(json.toString());
@@ -262,4 +145,27 @@ public class SLADataAnalyzer extends AbstractDataAnalyzer<JsonNode> {
 			return (JsonNode) mappedJson;
 		};
 	}
+	
+    private static class IngestionTimeWatermarkStrategy<T> implements WatermarkStrategy<T> {
+
+		private static final long serialVersionUID = 2099042171426356537L;
+
+		private IngestionTimeWatermarkStrategy() {}
+
+        public static <T> IngestionTimeWatermarkStrategy<T> create() {
+            return new IngestionTimeWatermarkStrategy<>();
+        }
+
+        @Override
+        public WatermarkGenerator<T> createWatermarkGenerator(
+                WatermarkGeneratorSupplier.Context context) {
+            return new AscendingTimestampsWatermarks<>();
+        }
+
+        @Override
+        public TimestampAssigner<T> createTimestampAssigner(
+                TimestampAssignerSupplier.Context context) {
+            return (event, timestamp) -> System.currentTimeMillis();
+        }
+    }
 }

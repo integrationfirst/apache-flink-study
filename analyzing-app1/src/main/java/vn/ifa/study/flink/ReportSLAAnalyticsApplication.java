@@ -40,45 +40,6 @@ public class ReportSLAAnalyticsApplication {
 
 	public static void main(final String[] args) throws Exception {
 		final SLADataAnalyzer analyzer = new SLADataAnalyzer(args);
-		analyzer.test();
+		analyzer.analyze();
 	}
-
-	/*
-	 * private void test() throws Exception { StreamExecutionEnvironment env =
-	 * StreamExecutionEnvironment.getExecutionEnvironment();
-	 *
-	 * final DataStream<String> dataStream1 = env.fromElements("John", "Zbe",
-	 * "Zico");
-	 *
-	 * final DataStream<String> dataStream2 = env.fromElements("John", "Zbe",
-	 * "Abe");
-	 *
-	 * dataStream1 .join(dataStream2) .where(new KeySelector<String, String>() {
-	 *
-	 * private static final long serialVersionUID = -8244502354779754470L;
-	 *
-	 * @Override public String getKey(String value) throws Exception {
-	 * System.out.println("where:json " + value); return value; } }) .equalTo(new
-	 * KeySelector<String, String>() {
-	 *
-	 * private static final long serialVersionUID = 6569463193999775400L;
-	 *
-	 * @Override public String getKey(String value) throws Exception {
-	 * System.out.println("equal:json " + value); return value; } })
-	 * .window(TumblingEventTimeWindows.of(Time.seconds(5))) .apply(new
-	 * JoinFunction<String, String, String>() {
-	 *
-	 * private static final long serialVersionUID = -7013974409091960477L;
-	 *
-	 * @Override public String join(String first, String second) throws Exception {
-	 *
-	 * System.out.println("########first: " + first);
-	 * System.out.println("###########second: " + second);
-	 *
-	 * return first+" "+second; } }).print();
-	 *
-	 *
-	 * env.execute(); }
-	 */
-
 }
