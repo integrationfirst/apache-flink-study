@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 import org.apache.flink.api.common.eventtime.AscendingTimestampsWatermarks;
+import org.apache.flink.api.common.eventtime.RecordTimestampAssigner;
 import org.apache.flink.api.common.eventtime.TimestampAssigner;
 import org.apache.flink.api.common.eventtime.TimestampAssignerSupplier;
 import org.apache.flink.api.common.eventtime.WatermarkGenerator;
@@ -30,7 +31,13 @@ import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.functions.co.CoProcessFunction;
+import org.apache.flink.table.api.DataTypes;
+import org.apache.flink.table.api.Schema;
+import org.apache.flink.table.api.Table;
+import org.apache.flink.table.api.TableResult;
+import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.apache.flink.types.Row;
+import org.apache.flink.util.CloseableIterator;
 import org.apache.flink.util.Collector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,22 +56,108 @@ public class SLADataAnalyzer extends AbstractDataAnalyzer<JsonNode> {
 	private static final Logger log = LoggerFactory.getLogger(SLADataAnalyzer.class);
 
 	private static final long serialVersionUID = 4919141782930956120L;
-
+	
 	public SLADataAnalyzer(final String[] args) throws IOException {
 		super(args);
 	}
 
 	@Override
 	protected DataStream<JsonNode> analyze(final DataStream<JsonNode> dataStream) {
-
+        /*
+         * Create two data streams
+         */
+		final DataStream<JsonNode> dataStream1 = dataStream
+				.assignTimestampsAndWatermarks(IngestionTimeWatermarkStrategy.<JsonNode>create());
 		final Properties properties = this.getConfiguration("userInfo");
-		DataStreamSource<Row> dataStreamSource = SourceFactory.createS3Source(properties,
+		final DataStreamSource<Row> dataStream2 = SourceFactory.createS3Source(properties,
 				getStreamExecutionEnvironment());
+		
+		/*
+         * Convert data stream to table
+         */
+		final StreamTableEnvironment tableEnv = getStreamTableEnvironment();
+		
+		final Schema userInfoSchema = Schema.newBuilder()
+				.column("f0", "STRING NOT NULL")
+				.column("f1", "STRING NOT NULL")
+				.column("f2", "STRING NOT NULL")
+				.primaryKey("f0")
+				.build();
+		
+		final Table userInfoTable = tableEnv.fromChangelogStream(dataStream2, userInfoSchema);
+		tableEnv.createTemporaryView("userInfoTable", userInfoTable);
 
-		dataStream.keyBy(getDataStream1Key()).connect(dataStreamSource.keyBy(getDataStream2Key()))
-				.process(lookupFullName()).print();
-
+		final Schema kafkaSchema = Schema.newBuilder()
+				.column("f0", "STRING")
+				.build();
+		
+		final Table kafkaTable = tableEnv.fromDataStream(dataStream1, kafkaSchema);
+		kafkaTable.execute();
+//		tableEnv.createTemporaryView("kafkaTable", kafkaTable);
+//		
+//		getStreamTableEnvironment().executeSql("SELECT * FROM kafkaTable").print();
+		
+		/*
+         * Enrich the user name json
+         */
+		
+//		Table enrichedTable = getStreamTableEnvironment().sqlQuery("SELECT userInfo.f1 , kafka.f FROM userInfoTable userInfo JOIN kafkaTable kafka ON userInfo.f1 = kafka.f0");
+		
+//		dataStream1
+//			.map(enrichUserNameJson())
+//			.print("After joinning - ");
+		
+//		dataStream1
+//			.join(dataStream2)
+//			.where(getDataStream1Key("where"))
+//			.equalTo(getDataStream1Key("equalTo"))
+//			.window(TumblingEventTimeWindows.of(Time.seconds(5)))
+//			.apply(new JoinFunction<JsonNode, JsonNode, String>() {
+//	
+//				private static final long serialVersionUID = -7013974409091960477L;
+//	
+//				@Override
+//				public String join(JsonNode first, JsonNode second) throws Exception {
+//					
+//					System.out.println("########first: " + first);
+//					System.out.println("###########second: " + second);
+//					
+//					return first+" "+second;
+//				}
+//			})
+//			.print();
 		return dataStream;
+	}
+
+	private MapFunction<JsonNode, JsonNode> enrichUserNameJson() {
+		return new MapFunction<JsonNode, JsonNode>() {
+
+			private static final long serialVersionUID = -7826288729532687462L;
+
+			@Override
+			public JsonNode map(JsonNode value) throws Exception {
+				
+				final String name = value.get("name").asText();
+				
+				final TableResult joinedUserInfoTableResult = getStreamTableEnvironment()
+						.sqlQuery(String.format("SELECT * FROM userInfoTable WHERE f1 = '%s'", name))
+						.execute();
+				
+				final CloseableIterator<Row> iter = joinedUserInfoTableResult.collect();
+				
+				String fullName = null;
+				while (iter.hasNext()) {
+					final Row row = (Row) iter.next();
+					fullName = (String) row.getField("fullName");
+				}
+				
+				final ObjectNode objectNode = (ObjectNode) value; 
+				objectNode.put("fullName", fullName);
+				objectNode.toPrettyString();
+				
+				return objectNode;
+			}
+		};
 	}
 
 	private CoProcessFunction<JsonNode, Row, String> lookupFullName() {
@@ -117,13 +210,13 @@ public class SLADataAnalyzer extends AbstractDataAnalyzer<JsonNode> {
 				};
 	}
 
-	private KeySelector<JsonNode, String> getDataStream1Key() {
+	private KeySelector<JsonNode, String> getDataStream1Key(String functionName) {
 		return new KeySelector<JsonNode, String>() {
 			private static final long serialVersionUID = -8244502354779754470L;
 
 			@Override
 			public String getKey(JsonNode value) throws Exception {
-				System.out.println("keyBy:value " + value.get("name").asText());
+				System.out.println(functionName + ":value " + value.get("name").asText());
 				return value.get("name").asText();
 			}
 		};
@@ -165,7 +258,7 @@ public class SLADataAnalyzer extends AbstractDataAnalyzer<JsonNode> {
         @Override
         public TimestampAssigner<T> createTimestampAssigner(
                 TimestampAssignerSupplier.Context context) {
-            return (event, timestamp) -> System.currentTimeMillis();
+            return new RecordTimestampAssigner<T>();
         }
     }
 }
