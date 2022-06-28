@@ -78,9 +78,9 @@ public class SLADataAnalyzer extends AbstractTableAnalyzer {
         SourceFactory.createTableFromS3DataStream("userInfoTable", userInfoSchema, properties,
                 getStreamExecutionEnvironment(), getStreamTableEnvironment());
 
-        Table userInfo = getStreamTableEnvironment().from("userInfoTable");
+        final Table userInfoTable = getStreamTableEnvironment().from("userInfoTable");
 
-        Table result = sourceTable.join(userInfo)
+        final Table resultTable = sourceTable.join(userInfoTable)
                                   .where(Expressions.$("username")
                                                     .isEqual(Expressions.$("f1")))
                                   .select(Expressions.$("managementData")
@@ -92,6 +92,6 @@ public class SLADataAnalyzer extends AbstractTableAnalyzer {
                                                      .at(1)
                                                      .get("endTime"),
                                           Expressions.$("f2"));
-        return result;
+        return resultTable;
     }
 }
