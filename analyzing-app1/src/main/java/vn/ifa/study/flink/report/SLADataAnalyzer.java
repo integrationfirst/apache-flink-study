@@ -21,7 +21,6 @@ import org.apache.flink.api.java.typeutils.RowTypeInfo;
 import org.apache.flink.table.api.Expressions;
 import org.apache.flink.table.api.Schema;
 import org.apache.flink.table.api.Table;
-import org.apache.flink.table.api.TableResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
