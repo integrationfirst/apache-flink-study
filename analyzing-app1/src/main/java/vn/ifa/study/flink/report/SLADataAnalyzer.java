@@ -21,6 +21,7 @@ import org.apache.flink.api.java.typeutils.RowTypeInfo;
 import org.apache.flink.table.api.Expressions;
 import org.apache.flink.table.api.Schema;
 import org.apache.flink.table.api.Table;
+import org.apache.flink.table.api.TableResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,19 +79,16 @@ public class SLADataAnalyzer extends AbstractTableAnalyzer {
         SourceFactory.createTableFromS3DataStream("userInfoTable", userInfoSchema, properties,
                 getStreamExecutionEnvironment(), getStreamTableEnvironment());
 
-        final Table userInfoTable = getStreamTableEnvironment().from("userInfoTable");
+        Table flattenTable = getStreamTableEnvironment().sqlQuery(
+                "SELECT eventId, startTime, endTime, username FROM kafkaTable CROSS JOIN UNNEST(stepsMetadata) AS stepsMetadata (startTime , endTime)");
 
-        final Table resultTable = sourceTable.join(userInfoTable)
+        final Table userInfoTable = getStreamTableEnvironment().from("userInfoTable");
+        
+        final Table resultTable = flattenTable.join(userInfoTable)
                                   .where(Expressions.$("username")
                                                     .isEqual(Expressions.$("f1")))
-                                  .select(Expressions.$("managementData")
-                                                     .get("stepsMetadata")
-                                                     .at(1)
-                                                     .get("startTime"),
-                                          Expressions.$("managementData")
-                                                     .get("stepsMetadata")
-                                                     .at(1)
-                                                     .get("endTime"),
+                                  .select(Expressions.$("startTime"),
+                                          Expressions.$("endTime"),
                                           Expressions.$("f2"));
         return resultTable;
     }
