@@ -19,6 +19,7 @@ import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.typeutils.RowTypeInfo;
 import org.apache.flink.table.api.Expressions;
+import org.apache.flink.table.api.GroupWindow;
 import org.apache.flink.table.api.Schema;
 import org.apache.flink.table.api.Table;
 import org.apache.flink.table.api.TableResult;
@@ -40,10 +41,11 @@ public class SLADataAnalyzer extends AbstractTableAnalyzer {
 
     @Override
     protected String sourceTableStatement() {
-        return "CREATE TABLE kafkaTable (eventId STRING, "
-                + "username STRING, "
-                + "managementData ROW< stepsMetadata ARRAY< ROW<startTime STRING, endTime STRING> > >, "
-                + "ts TIMESTAMP_LTZ(3) METADATA FROM 'timestamp', " + "WATERMARK FOR ts AS ts)";
+        return "CREATE TABLE kafkaTable (`case` ROW<caseId STRING>, " 
+                + "managementData ROW< status String, stepsMetadata ARRAY< ROW<operator STRING, endTime STRING> > >, "
+                + "processingData ARRAY< ROW< captureQualityControlData ARRAY< ROW<fieldName STRING, typistData STRING, qcData STRING, errorType STRING> > > >, "
+                + "ts TIMESTAMP_LTZ(3) METADATA FROM 'timestamp', " 
+                + "WATERMARK FOR ts AS ts)";
     }
 
     @Override
@@ -54,11 +56,11 @@ public class SLADataAnalyzer extends AbstractTableAnalyzer {
         typeInformations[1] = BasicTypeInfo.STRING_TYPE_INFO;
         typeInformations[2] = BasicTypeInfo.STRING_TYPE_INFO;
 
-        final String[] fieldNames = new String[3];
-        fieldNames[0] = "startTime";
-        fieldNames[1] = "endTime";
-        fieldNames[2] = "name";
 
+        final String[] fieldNames = new String[3];
+        fieldNames[0] = "caseId";
+        fieldNames[1] = "fieldName";
+        fieldNames[2] = "typistData";
         RowTypeInfo rowTypeInfo = new RowTypeInfo(typeInformations, fieldNames);
 
         return rowTypeInfo;
@@ -66,7 +68,6 @@ public class SLADataAnalyzer extends AbstractTableAnalyzer {
 
     @Override
     protected Table analyzeData() {
-        Table sourceTable = getStreamTableEnvironment().from("kafkaTable");
 
         final Properties properties = this.getConfiguration("userInfo");
 
@@ -78,18 +79,25 @@ public class SLADataAnalyzer extends AbstractTableAnalyzer {
                                             .build();
         SourceFactory.createTableFromS3DataStream("userInfoTable", userInfoSchema, properties,
                 getStreamExecutionEnvironment(), getStreamTableEnvironment());
+        
+        Table flattenQCTable = getStreamTableEnvironment().sqlQuery(
+                "SELECT `case`.caseId, fieldName, typistData, qcData, errorType FROM kafkaTable CROSS JOIN UNNEST(processingData[1].captureQualityControlData) AS captureQualityControlData (fieldName, typistData, qcData, errorType) WHERE managementData.status = 'QUALITY_CONTROL_DONE'");
+        getStreamTableEnvironment().createTemporaryView("flattenQCTable", flattenQCTable);
+        
+        Table flattenCapturingTable = getStreamTableEnvironment().sqlQuery(
+                "SELECT `case`.caseId, managementData.stepsMetadata[2].operator as operator FROM kafkaTable WHERE managementData.status = 'CAPTURE_DONE'");
+        getStreamTableEnvironment().createTemporaryView("flattenCapturingTable", flattenCapturingTable);
 
-        Table flattenTable = getStreamTableEnvironment().sqlQuery(
-                "SELECT eventId, startTime, endTime, username FROM kafkaTable CROSS JOIN UNNEST(stepsMetadata) AS stepsMetadata (startTime , endTime)");
+        Table table = getStreamTableEnvironment().sqlQuery(
+                "SELECT cap.caseId, qc.fieldName, qc.typistData, qc.qcData, qc.errorType, operator as username FROM flattenQCTable qc, flattenCapturingTable cap");
 
         final Table userInfoTable = getStreamTableEnvironment().from("userInfoTable");
-        
-        final Table resultTable = flattenTable.join(userInfoTable)
-                                  .where(Expressions.$("username")
-                                                    .isEqual(Expressions.$("f1")))
-                                  .select(Expressions.$("startTime"),
-                                          Expressions.$("endTime"),
-                                          Expressions.$("f2"));
+
+        final Table resultTable = table.join(userInfoTable)
+                                      .where(Expressions.$("username")
+                                                        .isEqual(Expressions.$("f1")))
+                                      .select(Expressions.$("caseId"), Expressions.$("fieldName"),
+                                              Expressions.$("username"));
         return resultTable;
     }
 }
